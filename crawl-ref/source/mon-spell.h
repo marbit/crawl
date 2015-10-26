@@ -2020,4 +2020,13 @@ static const mon_spellbook mspell_list[] =
        { SPELL_DRAIN_LIFE, 30, MON_SPELL_MAGICAL },
       }
     },
+
+    {  MST_DEEP_ELF_ARCHER,
+      {
+       { SPELL_BLINK_OTHER, 24, MON_SPELL_WIZARD },
+       { SPELL_SLOW, 12, MON_SPELL_WIZARD },
+       { SPELL_CONFUSE, 12, MON_SPELL_WIZARD },
+       { SPELL_REPEL_MISSILES, 12, MON_SPELL_WIZARD },
+      }
+    },
 };

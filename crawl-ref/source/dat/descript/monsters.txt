@@ -851,6 +851,10 @@ deep elf annihilator
 A deep elf who exults in conjured mayhem and destruction. It is widely hated
 and feared, both for the power and for the precision of its destructive magics.
 %%%%
+deep elf archer
+
+An experienced deep elf fighter with a penchant for ranged combat.
+%%%%
 deep elf blademaster
 
 A champion of the deep elves, who scorns magic and is devoted to the study of

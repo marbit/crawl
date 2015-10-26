@@ -4497,7 +4497,7 @@ static void _blink_allies_away(const monster* mon)
 
     for (unsigned int i = 0; i < allies.size() && count; ++i)
     {
-        if (blink_away(allies[i], &you, false))
+        if (blink_away(*allies[i], you, false))
             count--;
     }
 }

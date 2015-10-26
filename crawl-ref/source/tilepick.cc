@@ -1119,6 +1119,8 @@ tileidx_t tileidx_monster_base(int type, bool in_water, int colour, int number,
         return TILEP_MONS_DEEP_ELF_FIGHTER;
     case MONS_DEEP_ELF_KNIGHT:
         return TILEP_MONS_DEEP_ELF_KNIGHT;
+    case MONS_DEEP_ELF_ARCHER:
+        return TILEP_MONS_DEEP_ELF_ARCHER;
     case MONS_DEEP_ELF_MAGE:
         return TILEP_MONS_DEEP_ELF_MAGE;
     case MONS_DEEP_ELF_HIGH_PRIEST:
@@ -3496,6 +3498,7 @@ static tileidx_t _tileidx_corpse(const item_def &item)
     case MONS_ELF:
     case MONS_DEEP_ELF_FIGHTER:
     case MONS_DEEP_ELF_KNIGHT:
+    case MONS_DEEP_ELF_ARCHER:
     case MONS_DEEP_ELF_BLADEMASTER:
     case MONS_DEEP_ELF_MASTER_ARCHER:
     case MONS_DEEP_ELF_MAGE:

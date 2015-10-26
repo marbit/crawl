@@ -300,6 +300,7 @@ bool mcache_monster::get_weapon_offset(tileidx_t mon_tile,
     switch (mon_tile)
     {
     // No shift necessary.
+    case TILEP_MONS_DEEP_ELF_ARCHER:
     case TILEP_MONS_DEEP_ELF_MASTER_ARCHER:
     case TILEP_MONS_DEEP_ELF_BLADEMASTER:
     case TILEP_MONS_CRIMSON_IMP:

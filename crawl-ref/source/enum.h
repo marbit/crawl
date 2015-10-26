@@ -2818,6 +2818,9 @@ enum monster_type                      // menv[].type
 #endif
     MONS_DEEP_ELF_FIGHTER,
     MONS_DEEP_ELF_KNIGHT,
+#if TAG_MAJOR_VERSION > 34
+    MONS_DEEP_ELF_ARCHER
+#endif
     MONS_DEEP_ELF_MAGE,
 #if TAG_MAJOR_VERSION == 34
     MONS_DEEP_ELF_SUMMONER,
@@ -3437,6 +3440,7 @@ enum monster_type                      // menv[].type
     MONS_MUTANT_BEAST,
     MONS_JUGGERNAUT,
     MONS_SPARK_WASP,
+    MONS_DEEP_ELF_ARCHER,
 #endif
 
     NUM_MONSTERS,               // used for polymorph

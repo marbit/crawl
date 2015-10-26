@@ -379,19 +379,20 @@ void blink_other_close(actor* victim, const coord_def &target)
 }
 
 // Blink a monster away from the caster.
-bool blink_away(monster* mon, actor* caster, bool from_seen, bool self_cast)
+bool blink_away(actor &victim, actor &caster, bool from_seen, bool self_cast)
 {
-    ASSERT(mon); // XXX: change to monster &mon
-    ASSERT(caster); // XXX: change to actor &caster
-
-    if (from_seen && !mon->can_see(*caster))
+    if (from_seen && !victim.can_see(caster))
         return false;
-    bool jumpy = self_cast && mon->is_jumpy();
-    coord_def dest = random_space_weighted(mon, caster, false, false, true);
+    bool jumpy = self_cast
+                 && victim.is_monster()
+                 && victim.as_monster()->is_jumpy();
+    coord_def dest = random_space_weighted(&victim, &caster, false, true, true);
     if (dest.origin())
         return false;
-    bool success = mon->blink_to(dest, false, jumpy);
-    ASSERT(success || mon->is_constricted());
+    bool success = victim.is_monster()
+                   ? victim.as_monster()->blink_to(dest, false, jumpy)
+                   : victim.blink_to(dest);;
+    ASSERT(success || victim.is_constricted());
     return success;
 }
 
@@ -401,7 +402,7 @@ bool blink_away(monster* mon, bool self_cast)
     actor* foe = mon->get_foe();
     if (!foe)
         return false;
-    return blink_away(mon, foe, true, self_cast);
+    return blink_away(*mon, *foe, true, self_cast);
 }
 
 // Blink the monster within range but at distance to its foe.

@@ -3532,7 +3532,10 @@ void bolt::affect_player_enchantment(bool resistible)
         break;
 
     case BEAM_BLINK:
-        uncontrolled_blink();
+        if (agent())
+            blink_away(you, *agent());
+        else
+            uncontrolled_blink();
         obvious_effect = true;
         break;
 
@@ -5301,7 +5304,10 @@ mon_resist_type bolt::apply_enchantment_to_monster(monster* mon)
             return MON_UNAFFECTED;
         if (mon->observable())
             obvious_effect = true;
-        monster_blink(mon);
+        if (agent())
+            blink_away(*mon, *agent());
+        else
+            monster_blink(mon);
         return MON_AFFECTED;
 
     case BEAM_BLINK_CLOSE:

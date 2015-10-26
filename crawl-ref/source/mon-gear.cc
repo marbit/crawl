@@ -497,6 +497,19 @@ static void _give_weapon(monster* mon, int level, bool melee_only = false,
         break;
     }
 
+    case MONS_DEEP_ELF_ARCHER:
+        force_uncursed = true;
+        item.base_type = OBJ_WEAPONS;
+        if (!melee_only)
+        {
+            item.sub_type  = random_choose_weighted(2, WPN_SHORTBOW,
+                                                    1, WPN_LONGBOW,
+                                                    0);
+            break;
+        }
+        item.sub_type  = random_choose(WPN_SHORT_SWORD, WPN_DAGGER);
+        break;
+
     case MONS_DEEP_ELF_MASTER_ARCHER:
         item.base_type = OBJ_WEAPONS;
         item.sub_type  = WPN_LONGBOW;
@@ -1951,6 +1964,7 @@ static void _give_armour(monster* mon, int level, bool spectral_orcs, bool merc)
 
     switch (type)
     {
+    case MONS_DEEP_ELF_ARCHER:
     case MONS_DEEP_ELF_BLADEMASTER:
     case MONS_DEEP_ELF_MASTER_ARCHER:
         item.base_type = OBJ_ARMOUR;
