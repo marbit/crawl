@@ -2243,11 +2243,6 @@ static vector<mon_spellbook_type> _mons_spellbook_list(monster_type mon_type)
         return { MST_TENGU_REAVER_I, MST_TENGU_REAVER_II,
                  MST_TENGU_REAVER_III };
 
-    case MONS_DEEP_ELF_MAGE:
-        return { MST_DEEP_ELF_MAGE_I, MST_DEEP_ELF_MAGE_II,
-                 MST_DEEP_ELF_MAGE_III, MST_DEEP_ELF_MAGE_IV,
-                 MST_DEEP_ELF_MAGE_V };
-
     case MONS_FAUN:
         return { MST_FAUN_I, MST_FAUN_II };
 
@@ -2364,6 +2359,49 @@ mon_spell_slot drac_breath(monster_type drac_type)
     slot.flags = MON_SPELL_NATURAL | MON_SPELL_BREATH;
     return slot;
 }
+
+
+static const vector<mon_spell_slot> elf_mage_primary_summoner_spells =
+{
+    { SPELL_SUMMON_ICE_BEAST, 11, MON_SPELL_WIZARD },
+    { SPELL_SUMMON_VERMIN, 45, MON_SPELL_WIZARD },
+};
+
+static const vector<mon_spell_slot> elf_mage_primary_conjurer_spells =
+{
+    { SPELL_STONE_ARROW, 37, MON_SPELL_WIZARD },
+    { SPELL_FIREBALL, 22, MON_SPELL_WIZARD },
+    { SPELL_THROW_ICICLE, 22, MON_SPELL_WIZARD },
+    { SPELL_BOLT_OF_MAGMA, 19, MON_SPELL_WIZARD },
+    { SPELL_BOLT_OF_FIRE, 15, MON_SPELL_WIZARD },
+    { SPELL_BOLT_OF_COLD, 15, MON_SPELL_WIZARD },
+    { SPELL_LIGHTNING_BOLT, 15, MON_SPELL_WIZARD },
+    { SPELL_BOLT_OF_DRAINING, 15, MON_SPELL_WIZARD },
+    { SPELL_ISKENDERUNS_MYSTIC_BLAST, 11, MON_SPELL_WIZARD },
+    { SPELL_VENOM_BOLT, 11, MON_SPELL_WIZARD },
+    { SPELL_STICKY_FLAME_RANGE, 11, MON_SPELL_WIZARD },
+    { SPELL_FORCE_LANCE, 11, MON_SPELL_WIZARD },
+    { SPELL_ISKENDERUNS_MYSTIC_BLAST, 11, MON_SPELL_WIZARD },
+};
+
+static const vector<mon_spell_slot> elf_mage_secondary_spells =
+{
+    { SPELL_BATTLESPHERE, 22, MON_SPELL_WIZARD },
+    { SPELL_FREEZE, 22, MON_SPELL_WIZARD },
+    { SPELL_FLAME_TONGUE, 11, MON_SPELL_WIZARD },
+    { SPELL_THROW_FLAME, 22, MON_SPELL_WIZARD },
+    { SPELL_THROW_FROST, 22, MON_SPELL_WIZARD },
+    { SPELL_MAGIC_DART, 11, MON_SPELL_WIZARD },
+    { SPELL_BLINK, 22, MON_SPELL_WIZARD },
+    { SPELL_CONFUSE, 11, MON_SPELL_WIZARD },
+    { SPELL_SLOW, 22, MON_SPELL_WIZARD },
+};
+
+static const vector<mon_spell_slot> elf_mage_buff_spells =
+{
+    { SPELL_HASTE, 11, MON_SPELL_WIZARD },
+    { SPELL_INVISIBILITY, 11, MON_SPELL_WIZARD },
+};
 
 static const vector<mon_spell_slot> lich_primary_summoner_spells =
 {
@@ -2533,6 +2571,18 @@ struct random_caster_spell_def
 static const map<monster_type, random_caster_spell_def> random_caster_spells =
 {
     {
+      MONS_DEEP_ELF_MAGE,
+      {
+        2, 4,
+        false,
+        false,
+        &elf_mage_primary_summoner_spells,
+        &elf_mage_primary_conjurer_spells,
+        &elf_mage_secondary_spells,
+        &elf_mage_buff_spells
+      }
+    },
+    {
       MONS_LICH,
       {
         5, 7,
@@ -2614,8 +2664,12 @@ void mons_load_spells(monster* mon)
         if (breath.spell != SPELL_NO_SPELL)
             mon->spells.push_back(breath);
     }
-    else if (mon->type == MONS_LICH || mon->type == MONS_ANCIENT_LICH)
+    else if (mon->type == MONS_DEEP_ELF_MAGE
+             || mon->type == MONS_LICH
+             || mon->type == MONS_ANCIENT_LICH)
+    {
         _load_random_caster_spells(*mon);
+    }
 
     if (book == MST_NO_SPELLS)
         return;

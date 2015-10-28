@@ -3188,6 +3188,10 @@ static string _monster_spells_description(const monster_info& mi)
     if (mi.type == MONS_LICH || mi.type == MONS_ANCIENT_LICH)
         return "It has mastered any of a vast number of powerful spells.\n";
 
+    // Ditto for some elves.
+    if (mi.type == MONS_DEEP_ELF_MAGE)
+        return "It has mastered any of a vast number of spells.\n";
+
     // Show monster spells and spell-like abilities.
     if (!mi.has_spells())
         return "";

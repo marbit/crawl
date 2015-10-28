@@ -417,22 +417,6 @@ static const mon_spellbook mspell_list[] =
       }
     },
 
-    {  MST_DEEP_ELF_SUMMONER,
-      {
-       { SPELL_BLINK, 15, MON_SPELL_WIZARD },
-       { SPELL_SUMMON_VERMIN, 45, MON_SPELL_WIZARD  },
-      }
-    },
-
-    {  MST_DEEP_ELF_CONJURER,
-      {
-       { SPELL_BOLT_OF_FIRE, 15, MON_SPELL_WIZARD },
-       { SPELL_BOLT_OF_COLD, 15, MON_SPELL_WIZARD },
-       { SPELL_LIGHTNING_BOLT, 15, MON_SPELL_WIZARD },
-       { SPELL_BOLT_OF_DRAINING, 15, MON_SPELL_WIZARD },
-      }
-    },
-
     {  MST_DEEP_ELF_PRIEST,
       {
        { SPELL_PAIN, 14, MON_SPELL_PRIEST },
@@ -1492,53 +1476,6 @@ static const mon_spellbook mspell_list[] =
        { SPELL_HELLFIRE_BURST, 11, MON_SPELL_PRIEST },
        { SPELL_SMITING, 11, MON_SPELL_PRIEST },
        { SPELL_MINOR_HEALING, 22, MON_SPELL_PRIEST },
-      }
-    },
-
-    // deep elf ie
-    {  MST_DEEP_ELF_MAGE_I,
-      {
-       { SPELL_FREEZE, 22, MON_SPELL_WIZARD },
-       { SPELL_THROW_ICICLE, 22, MON_SPELL_WIZARD },
-       { SPELL_SUMMON_ICE_BEAST, 11, MON_SPELL_WIZARD },
-      }
-    },
-
-    // deep elf ee
-    {  MST_DEEP_ELF_MAGE_II,
-      {
-       { SPELL_BOLT_OF_MAGMA, 19, MON_SPELL_WIZARD },
-       { SPELL_STONE_ARROW, 37, MON_SPELL_WIZARD },
-      }
-    },
-
-    // deep elf wz
-    {  MST_DEEP_ELF_MAGE_III,
-      {
-       { SPELL_ISKENDERUNS_MYSTIC_BLAST, 11, MON_SPELL_WIZARD },
-       { SPELL_SLOW, 11, MON_SPELL_WIZARD },
-       { SPELL_VENOM_BOLT, 11, MON_SPELL_WIZARD },
-       { SPELL_BLINK, 22, MON_SPELL_WIZARD },
-      }
-    },
-
-    // deep elf --fe
-    {  MST_DEEP_ELF_MAGE_IV,
-      {
-       { SPELL_FLAME_TONGUE, 11, MON_SPELL_WIZARD },
-       { SPELL_STICKY_FLAME_RANGE, 11, MON_SPELL_WIZARD },
-       { SPELL_FIREBALL, 22, MON_SPELL_WIZARD },
-       { SPELL_THROW_FLAME, 11, MON_SPELL_WIZARD },
-      }
-    },
-
-    // deep elf cj
-    {  MST_DEEP_ELF_MAGE_V,
-      {
-       { SPELL_MAGIC_DART, 11, MON_SPELL_WIZARD },
-       { SPELL_FORCE_LANCE, 11, MON_SPELL_WIZARD },
-       { SPELL_BATTLESPHERE, 22, MON_SPELL_WIZARD  },
-       { SPELL_ISKENDERUNS_MYSTIC_BLAST, 11, MON_SPELL_WIZARD },
       }
     },
 
