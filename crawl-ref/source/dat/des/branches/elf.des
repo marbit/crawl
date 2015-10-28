@@ -646,7 +646,7 @@ NSUBST:  1 = 2:1 / *:.
 NSUBST:  2 = 2:2 / *:.
 KITEM:   A = any good_item
 KITEM:   B = any good_item
-KMONS:   A = patrolling deep elf knight
+KMONS:   A = patrolling deep elf knight / patrolling deep elf archer
 KMONS:   B = patrolling deep elf high priest / patrolling deep elf demonologist
 MONS:    ice dragon, fire dragon
 MONS:    orc knight / orc sorcerer / orc high priest
@@ -681,8 +681,8 @@ SUBST:   3 = 3 .:1
 # the deep elf delegation:
 MONS:    deep elf blademaster / deep elf master archer
 MONS:    deep elf annihilator / deep elf sorcerer / deep elf death mage
-MONS:    deep elf knight / w:1 deep elf high priest / \
-         w:1 deep elf demonologist
+MONS:    deep elf knight w:5 / deep elf archer w:5 / \
+         w:1 deep elf high priest / w:1 deep elf demonologist
 # the orcish delegation:
 MONS:    orc warlord / iron troll / w:1 fire giant / w:1 frost giant / \
          w:1 stone giant / w:1 ettin
@@ -711,7 +711,8 @@ ENDMAP
 
 NAME:  guppyfry_elf_castle
 DEPTH: Elf:2-
-MONS:  deep elf fighter / deep elf mage / deep elf knight
+MONS:  deep elf fighter / deep elf mage / deep elf knight w:5 / \
+       deep elf archer w:5
 MONS:  deep elf blademaster / deep elf death mage / deep elf sorcerer
 MONS:  plant
 SUBST: - = .%*3$
@@ -758,7 +759,7 @@ ENDMAP
 
 NAME:  guppyfry_elf_altar
 DEPTH: Elf:2-
-MONS:  deep elf knight / deep elf mage
+MONS:  deep elf knight w:5 / deep elf archer w:5 / deep elf mage
 MONS:  deep elf high priest
 SUBST: F = G:6 F:1
 KMONS: F = orange crystal statue / obsidian statue / ice statue
