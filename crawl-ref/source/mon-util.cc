@@ -2365,6 +2365,11 @@ static const vector<mon_spell_slot> elf_mage_primary_summoner_spells =
 {
     { SPELL_SUMMON_ICE_BEAST, 11, MON_SPELL_WIZARD },
     { SPELL_SUMMON_VERMIN, 45, MON_SPELL_WIZARD },
+    { SPELL_FIRE_ELEMENTALS, 22, MON_SPELL_WIZARD },
+    { SPELL_WATER_ELEMENTALS, 22, MON_SPELL_WIZARD },
+    { SPELL_AIR_ELEMENTALS, 22, MON_SPELL_WIZARD },
+    { SPELL_EARTH_ELEMENTALS, 22, MON_SPELL_WIZARD },
+    { SPELL_SUMMON_DEMON, 22, MON_SPELL_WIZARD },
 };
 
 static const vector<mon_spell_slot> elf_mage_primary_conjurer_spells =
