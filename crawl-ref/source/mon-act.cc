@@ -1935,6 +1935,16 @@ void handle_monster_move(monster* mons)
         return;
     }
 
+    if (mons->has_ench(ENCH_BRILLIANCE_AURA))
+    {
+        aura_of_brilliance(mons);
+        if (mons->has_ench(ENCH_BRILLIANCE_AURA))
+        {
+            mons->speed_increment -= non_move_energy;
+            return;
+        }
+    }
+
     if (you.duration[DUR_GOZAG_GOLD_AURA]
         && in_good_standing(GOD_GOZAG)
         && !mons->asleep()
