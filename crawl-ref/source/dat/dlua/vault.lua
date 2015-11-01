@@ -125,6 +125,6 @@ function halls_of_blades_weapon(e)
     ego2 = util.random_from(egos)
   end
 
-  e.mons("dancing weapon; good_item " .. weapon1 .. " ego:" .. ego1)
-  e.mons("dancing weapon; good_item " .. weapon2 .. " ego:" .. ego2)
+  e.kmons("d = dancing weapon; good_item " .. weapon1 .. " ego:" .. ego1)
+  e.kmons("e = dancing weapon; good_item " .. weapon2 .. " ego:" .. ego2)
 end

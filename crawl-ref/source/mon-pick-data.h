@@ -169,11 +169,11 @@ static const pop_entry pop_orc[] =
 
 static const pop_entry pop_elf[] =
 { // Elven Halls (OOD cap: 7)
-  {  1,  7, 1000, FLAT, MONS_NO_MONSTER }, // was fungus
   {  1,  5,   50, FLAT, MONS_ORC_HIGH_PRIEST },
   {  1,  6,   50, FLAT, MONS_ORC_SORCERER },
   {  1,  7, 1175, FLAT, MONS_DEEP_ELF_FIGHTER },
   {  1,  7, 2775, FLAT, MONS_DEEP_ELF_MAGE },
+  {  1,  7, 1385, FLAT, MONS_DANCING_WEAPON },
   {  1,  7,  925, FLAT, MONS_DEEP_ELF_KNIGHT },
   {  1,  7,  925, FLAT, MONS_DEEP_ELF_ARCHER },
   {  1,  8,   65, SEMI, MONS_DEEP_ELF_SORCERER },
