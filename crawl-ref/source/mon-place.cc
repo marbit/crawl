@@ -2283,11 +2283,24 @@ static band_type _choose_band(monster_type mon_type, int &band_size,
         }
         break;
 
+    case MONS_DEEP_ELF_MAGE:
+    case MONS_DEEP_ELF_SORCERER:
+    case MONS_DEEP_ELF_ANNIHILATOR:
+    case MONS_DEEP_ELF_DEMONOLOGIST:
+    case MONS_DEEP_ELF_DEATH_MAGE: // something else for these guys maybe?
+        if (coinflip())
+        {
+            natural_leader = true;
+            band = BAND_DEEP_ELF;
+            band_size = 1;
+        }
+        break;
+
     case MONS_DEEP_ELF_FIGHTER:
         if (coinflip())
         {
             band = BAND_DEEP_ELF_FIGHTER;
-            band_size = 2 + random2(3);
+            band_size = 3 + random2(5);
         }
         break;
 
@@ -2296,7 +2309,7 @@ static band_type _choose_band(monster_type mon_type, int &band_size,
         if (coinflip())
         {
             band = BAND_DEEP_ELF_KNIGHT;
-            band_size = 3 + random2(2);
+            band_size = 5 + random2(3);
         }
         break;
 
@@ -2305,7 +2318,7 @@ static band_type _choose_band(monster_type mon_type, int &band_size,
         {
             natural_leader = true;
             band = BAND_DEEP_ELF_HIGH_PRIEST;
-            band_size = 3 + random2(4);
+            band_size = 5 + random2(7);
         }
         break;
 
@@ -3090,14 +3103,26 @@ static monster_type _band_member(band_type band, int which,
     case BAND_HELLWING:
         return coinflip() ? MONS_HELLWING : MONS_SMOKE_DEMON;
 
+    case BAND_DEEP_ELF:
+        return random_choose(MONS_FIRE_ELEMENTAL, MONS_WATER_ELEMENTAL,
+                             MONS_AIR_ELEMENTAL,  MONS_EARTH_ELEMENTAL);
+
     case BAND_DEEP_ELF_FIGHTER:
-        return random_choose_weighted(5, MONS_DEEP_ELF_MAGE,
-                                      4, MONS_DEEP_ELF_FIGHTER,
-                                      0);
+        return random_choose_weighted(20, MONS_DEEP_ELF_MAGE,
+                                      16, MONS_DEEP_ELF_FIGHTER,
+                                       9, MONS_FIRE_ELEMENTAL,
+                                       9, MONS_WATER_ELEMENTAL,
+                                       9, MONS_AIR_ELEMENTAL,
+                                       9, MONS_EARTH_ELEMENTAL,
+                                       0);
 
     case BAND_DEEP_ELF_KNIGHT:
         return random_choose_weighted(92, MONS_DEEP_ELF_MAGE,
                                       72, MONS_DEEP_ELF_FIGHTER,
+                                      25, MONS_FIRE_ELEMENTAL,
+                                      25, MONS_WATER_ELEMENTAL,
+                                      25, MONS_AIR_ELEMENTAL,
+                                      25, MONS_EARTH_ELEMENTAL,
                                       14, MONS_DEEP_ELF_KNIGHT,
                                       14, MONS_DEEP_ELF_ARCHER,
                                        3, MONS_DEEP_ELF_DEATH_MAGE,
@@ -3109,6 +3134,10 @@ static monster_type _band_member(band_type band, int which,
     case BAND_DEEP_ELF_HIGH_PRIEST:
         return random_choose_weighted(6, MONS_DEEP_ELF_FIGHTER,
                                       5, MONS_DEEP_ELF_MAGE,
+                                      4, MONS_FIRE_ELEMENTAL,
+                                      4, MONS_WATER_ELEMENTAL,
+                                      4, MONS_AIR_ELEMENTAL,
+                                      4, MONS_EARTH_ELEMENTAL,
                                       1, MONS_DEEP_ELF_DEMONOLOGIST,
                                       1, MONS_DEEP_ELF_ANNIHILATOR,
                                       1, MONS_DEEP_ELF_SORCERER,
