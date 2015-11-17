@@ -16,6 +16,7 @@ These include:
        worley.{cc,h}
 * zlib: webserver/static/scripts/contrib/inflate.js
 * Apache v2: pcg.cc
+* Affero GPL: util/monster/monster-main.cc
 
 While a majority of the tiles are in the Public Domain, there is no accurate
 list. To err on the side of caution, please refer to Chris Hamons'
