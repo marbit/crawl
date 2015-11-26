@@ -534,6 +534,61 @@ void do_dragon_call(int time)
     you.attribute[ATTR_NEXT_DRAGON_TIME] -= time;
 }
 
+/**
+ * Handle the Doom Howl status effect, possibly summoning hostile doom hounds
+ * around the player.
+ *
+ * @param time      The number of aut that the howling has been going on for
+ *                  since the last doom_howl call.
+ */
+void doom_howl(int time)
+{
+    const int hounds = div_rand_round(time, 40); // dubious
+    if (!hounds)
+        return;
+
+    const actor *target = &you;
+    coord_def base_spot;
+
+    for (int t = 0; t < 100; ++t)
+    {
+        coord_def area = clamp_in_bounds(target->pos()
+                            + coord_def(random_range(-15, 15),
+                                        random_range(-15, 15)));
+        if (cell_see_cell(target->pos(), area, LOS_DEFAULT))
+            continue;
+
+        int tries = 0;
+        while (tries < 10 && base_spot.origin())
+        {
+            find_habitable_spot_near(area, MONS_DOOM_HOUND, 6, false,
+                                     base_spot);
+            if (cell_see_cell(target->pos(), base_spot, LOS_DEFAULT))
+                base_spot.reset();
+            ++tries;
+        }
+        if (base_spot.origin())
+            continue;
+    }
+
+    if (base_spot.origin())
+        return; // couldn't find anywhere to put a new hound
+
+    for (int i = 0; i < hounds; ++i)
+    {
+        monster *mons = create_monster(mgen_data(MONS_DOOM_HOUND, BEH_HOSTILE,
+                                                 NULL, 0, SPELL_NO_SPELL,
+                                                 base_spot, target->mindex(),
+                                                 MG_FORCE_BEH));
+        if (mons)
+        {
+            mons->add_ench(mon_enchant(ENCH_HAUNTING, 1, target,
+                                       INFINITE_DURATION));
+            mons->behaviour = BEH_SEEK;
+        }
+    }
+}
+
 spret_type cast_summon_dragon(actor *caster, int pow, god_type god, bool fail)
 {
     // Dragons are always friendly. Dragon type depends on power and

@@ -67,6 +67,8 @@ spret_type cast_summon_guardian_golem(int pow, god_type god, bool fail);
 spret_type cast_dragon_call(int pow, bool fail);
 void do_dragon_call(int time);
 
+void doom_howl(int time);
+
 void init_servitor(monster* servitor, actor* caster);
 spret_type cast_spellforged_servitor(int pow, god_type god, bool fail);
 

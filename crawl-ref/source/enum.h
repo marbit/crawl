@@ -1894,6 +1894,7 @@ enum duration_type
     DUR_COLLAPSE,
     DUR_BRAINLESS,
     DUR_CLUMSY,
+    DUR_DOOM_HOWL,
     NUM_DURATIONS
 };
 
@@ -2512,6 +2513,7 @@ enum monster_type                      // menv[].type
     MONS_HELL_HOUND,
 #if TAG_MAJOR_VERSION > 34
     MONS_RAIJU,
+    MONS_DOOM_HOUND,
 #endif
     MONS_HOG,
     MONS_HELL_HOG,
@@ -3433,6 +3435,7 @@ enum monster_type                      // menv[].type
     MONS_MUTANT_BEAST,
     MONS_JUGGERNAUT,
     MONS_SPARK_WASP,
+    MONS_DOOM_HOUND,
 #endif
 
     NUM_MONSTERS,               // used for polymorph
@@ -4539,6 +4542,7 @@ enum spell_type
     SPELL_ENTROPIC_WEAVE,
     SPELL_SUMMON_EXECUTIONERS,
     SPELL_VIOLENT_UNRAVELLING,
+    SPELL_DOOM_HOWL,
     NUM_SPELLS
 };
 

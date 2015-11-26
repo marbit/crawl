@@ -91,6 +91,7 @@ static void _maybe_throw_ally(const monster &mons);
 static int _throw_site_score(const monster &thrower, const actor &victim,
                              const coord_def &site);
 static void _siren_sing(monster* mons, bool avatar);
+static void _doom_howl(monster &mon, int pow);
 static bool _ms_waste_of_time(monster* mon, mon_spell_slot slot);
 
 void init_mons_spells()
@@ -300,6 +301,9 @@ static int _mons_power_hd_factor(spell_type spell, bool random)
 
         case SPELL_SENTINEL_MARK:
             return 16 * ENCH_POW_FACTOR;
+
+        case SPELL_DOOM_HOWL:
+            return 12 * ENCH_POW_FACTOR;
 
         case SPELL_SAP_MAGIC:
         case SPELL_MESMERISE:
@@ -1505,6 +1509,7 @@ bool setup_mons_cast(monster* mons, bolt &pbolt, spell_type spell_cast,
     case SPELL_GRAVITAS:
     case SPELL_ENTROPIC_WEAVE:
     case SPELL_SUMMON_EXECUTIONERS:
+    case SPELL_DOOM_HOWL:
         pbolt.range = 0;
         pbolt.glyph = 0;
         return true;
@@ -6486,6 +6491,10 @@ void mons_cast(monster* mons, bolt pbolt, spell_type spell_cast,
         }
         return;
     }
+
+    case SPELL_DOOM_HOWL:
+        _doom_howl(*mons, splpow);
+        break;
     }
 
     // If a monster just came into view and immediately cast a spell,
@@ -7385,6 +7394,28 @@ static bool _should_siren_sing(monster* mons, bool avatar)
 }
 
 /**
+ * Have a monster attempt to cast Doom Howl.
+ *
+ * @param mon   The howling monster.
+ * @param pow   The power with which the 'spell' is being cast.
+ *              (For resist chance)
+ */
+static void _doom_howl(monster &mon, int pow)
+{
+    simple_monster_message(&mon, " unleashes a terrible howl!");
+
+    const int res_magic = you.check_res_magic(pow / ENCH_POW_FACTOR);
+    if (res_magic > 0)
+    {
+        mprf("You%s", you.resist_margin_phrase(res_magic).c_str());
+        return;
+    }
+
+    mprf("The howling begins to echo in your mind!");
+    you.duration[DUR_DOOM_HOWL] = 80 + random2(41);
+}
+
+/**
  * Have a siren or merfolk avatar attempt to mesmerize the player.
  *
  * @param mons   The singing monster.
@@ -7997,6 +8028,9 @@ static bool _ms_waste_of_time(monster* mon, mon_spell_slot slot)
             }
 
         return true;
+
+    case SPELL_DOOM_HOWL:
+        return !foe || !foe->is_player() || you.duration[DUR_DOOM_HOWL];
 
 #if TAG_MAJOR_VERSION == 34
     case SPELL_SUMMON_TWISTER:

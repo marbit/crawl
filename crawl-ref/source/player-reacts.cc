@@ -1185,6 +1185,13 @@ static void _decrement_durations()
         you.redraw_armour_class = true;
     }
 
+    if (you.duration[DUR_DOOM_HOWL])
+    {
+        doom_howl(min(delay, you.duration[DUR_DOOM_HOWL]));
+        _decrement_a_duration(DUR_DOOM_HOWL, delay,
+                              "The infernal howling subsides.");
+    }
+
     if (_decrement_a_duration(DUR_GOZAG_GOLD_AURA, delay))
         you.props["gozag_gold_aura_amount"] = 0;
 
