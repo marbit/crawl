@@ -580,6 +580,7 @@ enum beam_type                  // bolt::flavour
     BEAM_RANDOM,                  // currently translates into FIRE..ACID
     BEAM_CHAOS,
     BEAM_GHOSTLY_FLAME,
+    BEAM_UNRAVELLED_MAGIC,
 
     // Enchantments
     BEAM_SLOW,
@@ -621,7 +622,8 @@ enum beam_type                  // bolt::flavour
     BEAM_DRAIN_MAGIC,
     BEAM_TUKIMAS_DANCE,
     BEAM_RESISTANCE,
-    BEAM_LAST_ENCHANTMENT = BEAM_RESISTANCE,
+    BEAM_UNRAVELLING,
+    BEAM_LAST_ENCHANTMENT = BEAM_UNRAVELLING,
 
     BEAM_MEPHITIC,
     BEAM_INK,
@@ -942,8 +944,6 @@ enum command_type
     CMD_GO_UPSTAIRS,
     CMD_GO_DOWNSTAIRS,
     CMD_TOGGLE_AUTOPICKUP,
-    CMD_TOGGLE_VIEWPORT_MONSTER_HP,
-    CMD_TOGGLE_VIEWPORT_WEAPONS,
     CMD_TOGGLE_TRAVEL_SPEED,
     CMD_PICKUP,
     CMD_PICKUP_QUANTITY,
@@ -1001,7 +1001,6 @@ enum command_type
     CMD_REDRAW_SCREEN,
     CMD_MACRO_ADD,
     CMD_SAVE_GAME,
-    CMD_SAVE_GAME_NOW,
     CMD_SUSPEND_GAME,
     CMD_QUIT,
     CMD_WIZARD,
@@ -2453,7 +2452,6 @@ enum mon_holy_type
 enum targ_mode_type
 {
     TARG_ANY,
-    TARG_ENEMY,  // hostile + neutral
     TARG_FRIEND,
     TARG_INJURED_FRIEND, // for healing
     TARG_HOSTILE,
@@ -2461,6 +2459,7 @@ enum targ_mode_type
     TARG_EVOLVABLE_PLANTS,  // Targeting mode for Fedhas' evolution
     TARG_HOSTILE_UNDEAD,    // For dispel undead
     TARG_BEOGH_GIFTABLE,    // For Beogh followers who can be given gifts
+    TARG_DISPELLABLE,       // For hostiles that have dispellable enchs
     TARG_NUM_MODES
 };
 
@@ -4545,7 +4544,7 @@ enum spell_type
 #endif
     SPELL_ENTROPIC_WEAVE,
     SPELL_SUMMON_EXECUTIONERS,
-    SPELL_CHANT_WORD_OF_ENTROPY,
+    SPELL_VIOLENT_UNRAVELLING,
     SPELL_AURA_OF_BRILLIANCE,
     NUM_SPELLS
 };
@@ -4717,7 +4716,7 @@ enum zap_type
     ZAP_RANDOM_BOLT_TRACER,
     ZAP_SCATTERSHOT,
     ZAP_MEPHITIC,
-
+    ZAP_UNRAVELLING,
     NUM_ZAPS
 };
 
@@ -5102,6 +5101,12 @@ enum timed_effect_type
     TIMER_BRIBE_TIMEOUT,
 #endif
     NUM_TIMERS,
+};
+
+enum rng_type {
+    RNG_GAMEPLAY,
+    RNG_UI,
+    NUM_RNGS,
 };
 
 #endif // ENUM_H

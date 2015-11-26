@@ -4589,7 +4589,7 @@ tileidx_t tileidx_bolt(const bolt &bolt)
         break;
 
     case ETC_MUTAGENIC:
-        if (bolt.name == "irradiate")
+        if (bolt.name == "irradiate" || bolt.name == "unravelling")
             return TILE_BOLT_IRRADIATE;
         break;
     }
@@ -4726,6 +4726,7 @@ tileidx_t tileidx_spell(spell_type spell)
     case SPELL_SONG_OF_SLAYING:          return TILEG_SONG_OF_SLAYING;
     case SPELL_SPECTRAL_WEAPON:          return TILEG_SPECTRAL_WEAPON;
     case SPELL_DISCORD:                  return TILEG_DISCORD;
+    case SPELL_VIOLENT_UNRAVELLING:      return TILEG_VIOLENT_UNRAVELLING;
 
     // Translocation
     case SPELL_APPORTATION:              return TILEG_APPORTATION;
@@ -5052,8 +5053,6 @@ tileidx_t tileidx_command(const command_type cmd)
         return TILEG_CMD_DISPLAY_CHARACTER_STATUS;
     case CMD_DISPLAY_KNOWN_OBJECTS:
         return TILEG_CMD_KNOWN_ITEMS;
-    case CMD_SAVE_GAME_NOW:
-        return TILEG_CMD_SAVE_GAME_NOW;
     case CMD_EDIT_PLAYER_TILE:
         return TILEG_CMD_EDIT_PLAYER_TILE;
     case CMD_DISPLAY_COMMANDS:
