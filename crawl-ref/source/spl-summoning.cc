@@ -548,43 +548,34 @@ void doom_howl(int time)
         return;
 
     const actor *target = &you;
-    coord_def base_spot;
-
-    for (int t = 0; t < 100; ++t)
-    {
-        coord_def area = clamp_in_bounds(target->pos()
-                            + coord_def(random_range(-15, 15),
-                                        random_range(-15, 15)));
-        if (cell_see_cell(target->pos(), area, LOS_DEFAULT))
-            continue;
-
-        int tries = 0;
-        while (tries < 10 && base_spot.origin())
-        {
-            find_habitable_spot_near(area, MONS_DOOM_HOUND, 6, false,
-                                     base_spot);
-            if (cell_see_cell(target->pos(), base_spot, LOS_DEFAULT))
-                base_spot.reset();
-            ++tries;
-        }
-        if (base_spot.origin())
-            continue;
-    }
-
-    if (base_spot.origin())
-        return; // couldn't find anywhere to put a new hound
 
     for (int i = 0; i < hounds; ++i)
     {
+        vector<coord_def> spots;
+        for (adjacent_iterator ai(target->pos()); ai; ++ai)
+        {
+            if (monster_habitable_grid(MONS_DOOM_HOUND, grd(*ai))
+                && !actor_at(*ai))
+            {
+                spots.push_back(*ai);
+            }
+        }
+        if (spots.size() <= 0)
+            return;
+
+        const coord_def pos = spots[random2(spots.size())];
+
         monster *mons = create_monster(mgen_data(MONS_DOOM_HOUND, BEH_HOSTILE,
                                                  NULL, 0, SPELL_NO_SPELL,
-                                                 base_spot, target->mindex(),
+                                                 pos, target->mindex(),
                                                  MG_FORCE_BEH));
         if (mons)
         {
             mons->add_ench(mon_enchant(ENCH_HAUNTING, 1, target,
                                        INFINITE_DURATION));
             mons->behaviour = BEH_SEEK;
+            check_place_cloud(CLOUD_BLACK_SMOKE, mons->pos(),
+                              random_range(1,2), mons);
         }
     }
 }
