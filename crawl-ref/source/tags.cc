@@ -60,6 +60,7 @@
 #endif
 #include "place.h"
 #include "player-stats.h"
+#include "prompt.h" // index_to_letter
 #include "religion.h"
 #include "skills.h"
 #include "spl-wpnench.h"
@@ -1466,6 +1467,11 @@ static void tag_construct_you(writer &th)
         marshallShort(th, you.demonic_traits[j].mutation);
     }
 
+    // set up sacrifice piety by ability
+    marshallShort(th, 1 + ABIL_FINAL_SACRIFICE - ABIL_FIRST_SACRIFICE);
+    for (int j = ABIL_FIRST_SACRIFICE; j <= ABIL_FINAL_SACRIFICE; ++j)
+        marshallByte(th, you.sacrifice_piety[j]);
+
     CANARY;
 
     // how many penances?
@@ -2559,7 +2565,7 @@ static void tag_read_you(reader &th)
         else
         {
 #endif
-        you.sacrifices[j] = unmarshallUByte(th);
+        you.sacrifices[j]       = unmarshallUByte(th);
 #if TAG_MAJOR_VERSION == 34
         }
 #endif
@@ -2627,7 +2633,7 @@ static void tag_read_you(reader &th)
 #endif
 
     for (int j = count; j < NUM_MUTATIONS; ++j)
-        you.mutation[j] = you.innate_mutation[j] = you.sacrifices[j] = 0;
+        you.mutation[j] = you.innate_mutation[j] = you.sacrifices[j];
 
 #if TAG_MAJOR_VERSION == 34
     if (th.getMinorVersion() < TAG_MINOR_NO_DEVICE_HEAL)
@@ -2839,6 +2845,45 @@ static void tag_read_you(reader &th)
 #endif
         ASSERT_RANGE(dt.mutation, 0, NUM_MUTATIONS);
         you.demonic_traits.push_back(dt);
+    }
+
+#if TAG_MAJOR_VERSION == 34
+    if (th.getMinorVersion() < TAG_MINOR_SAC_PIETY_LEN)
+    {
+        const int OLD_NUM_ABILITIES = 1503;
+
+        // set up sacrifice piety by abilities
+        for (int j = 0; j < NUM_ABILITIES; ++j)
+        {
+            if (th.getMinorVersion() < TAG_MINOR_RU_PIETY_CONSISTENCY
+                || j >= OLD_NUM_ABILITIES) // NUM_ABILITIES may have increased
+            {
+                you.sacrifice_piety[j] = 0;
+            }
+            else
+                you.sacrifice_piety[j] = unmarshallUByte(th);
+        }
+
+        // If NUM_ABILITIES decreased, discard the extras.
+        if (th.getMinorVersion() >= TAG_MINOR_RU_PIETY_CONSISTENCY)
+        {
+            for (int j = NUM_ABILITIES; j < OLD_NUM_ABILITIES; ++j)
+                (void) unmarshallUByte(th);
+        }
+    }
+    else
+#endif
+    {
+        const int num_saved = unmarshallShort(th);
+
+        you.sacrifice_piety.init(0);
+        for (int j = 0; j < num_saved; ++j)
+        {
+            const int idx = ABIL_FIRST_SACRIFICE + j;
+            const uint8_t val = unmarshallUByte(th);
+            if (idx <= ABIL_FINAL_SACRIFICE)
+                you.sacrifice_piety[idx] = val;
+        }
     }
 
     EAT_CANARY;
@@ -3275,18 +3320,38 @@ static void tag_read_you_items(reader &th)
     // how many inventory slots?
     count = unmarshallByte(th);
     ASSERT(count == ENDOFPACK); // not supposed to change
+#if TAG_MAJOR_VERSION == 34
+    string bad_slots;
+#endif
     for (int i = 0; i < count; ++i)
     {
-        unmarshallItem(th, you.inv[i]);
+        item_def &it = you.inv[i];
+        unmarshallItem(th, it);
 #if TAG_MAJOR_VERSION == 34
-        // Items in inventory have already been handled.
-        if (th.getMinorVersion() < TAG_MINOR_ISFLAG_HANDLED
-            && you.inv[i].defined())
+        // Fixups for actual items.
+        if (it.defined())
         {
-            you.inv[i].flags |= ISFLAG_HANDLED;
+            // From 0.18-a0-273-gf174401 to 0.18-a0-290-gf199c8b, stash
+            // search would change the position of items in inventory.
+            if (it.pos != ITEM_IN_INVENTORY)
+            {
+                bad_slots += index_to_letter(i);
+                it.pos = ITEM_IN_INVENTORY;
+            }
+
+            // Items in inventory have already been handled.
+            if (th.getMinorVersion() < TAG_MINOR_ISFLAG_HANDLED)
+                it.flags |= ISFLAG_HANDLED;
         }
 #endif
     }
+#if TAG_MAJOR_VERSION == 34
+    if (!bad_slots.empty())
+    {
+        mprf(MSGCH_ERROR, "Fixed bad positions for inventory slots %s",
+                          bad_slots.c_str());
+    }
+#endif
 
     // Initialize cache of equipped unrand functions
     for (int i = 0; i < NUM_EQUIP; ++i)

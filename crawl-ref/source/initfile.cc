@@ -333,6 +333,8 @@ string gametype_to_str(game_type type)
         return "arena";
     case GAME_TYPE_SPRINT:
         return "sprint";
+    case GAME_TYPE_HINTS:
+        return "hints";
     default:
         return "none";
     }
@@ -1133,6 +1135,7 @@ void game_options::reset_options()
     auto_ability_letters.clear();
     force_more_message.clear();
     flash_screen_message.clear();
+    confirm_action.clear();
     sound_mappings.clear();
     menu_colour_mappings.clear();
     message_colour_mappings.clear();
@@ -2536,6 +2539,7 @@ void game_options::read_option_line(const string &str, bool runscript)
         && key != "stop_travel" && key != "sound"
         && key != "force_more_message"
         && key != "flash_screen_message"
+        && key != "confirm_action"
         && key != "drop_filter" && key != "lua_file" && key != "terp_file"
         && key != "note_items" && key != "autoinscribe"
         && key != "note_monsters" && key != "note_messages"
@@ -3416,6 +3420,7 @@ void game_options::read_option_line(const string &str, bool runscript)
         }
         _merge_lists(filters, new_entries, caret_equal);
     }
+    else LIST_OPTION(confirm_action);
     else LIST_OPTION(drop_filter);
     else if (key == "travel_avoid_terrain")
     {

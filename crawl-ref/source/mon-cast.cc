@@ -2198,6 +2198,9 @@ static bool _seal_doors_and_stairs(const monster* warden,
         // Try to seal the door
         if (grd(*ri) == DNGN_CLOSED_DOOR || grd(*ri) == DNGN_RUNED_DOOR)
         {
+            if (check_only)
+                return true;
+
             set<coord_def> all_door;
             find_connected_identical(*ri, all_door);
             for (const auto &dc : all_door)
@@ -2209,6 +2212,9 @@ static bool _seal_doors_and_stairs(const monster* warden,
         }
         else if (feat_is_travelable_stair(grd(*ri)))
         {
+            if (check_only)
+                return true;
+
             dungeon_feature_type stype;
             if (feat_stair_direction(grd(*ri)) == CMD_GO_UPSTAIRS)
                 stype = DNGN_SEALED_STAIRS_UP;
@@ -2223,6 +2229,7 @@ static bool _seal_doors_and_stairs(const monster* warden,
 
     if (had_effect)
     {
+        ASSERT(!check_only);
         mprf(MSGCH_MONSTER_SPELL, "%s activates a sealing rune.",
                 (warden->visible_to(&you) ? warden->name(DESC_THE, true).c_str()
                                           : "Someone"));
@@ -7020,7 +7027,7 @@ static coord_def _choose_throwing_target(const monster &thrower,
             || !thrower.see_cell(*di)
             || !victim.see_cell(*di)
             || !victim.is_habitable(*di)
-            || !find_ray(victim.pos(), *di, ray, opc_solid_see))
+            || !find_ray(thrower.pos(), *di, ray, opc_solid_see))
         {
             continue;
         }
@@ -7940,7 +7947,7 @@ static bool _ms_waste_of_time(monster* mon, mon_spell_slot slot)
         return !_should_recall(mon);
 
     case SPELL_SHATTER:
-        return !friendly && !mons_shatter(mon, false);
+        return friendly || !mons_shatter(mon, false);
 
     case SPELL_SYMBOL_OF_TORMENT:
         return !_trace_los(mon, _torment_vulnerable)
