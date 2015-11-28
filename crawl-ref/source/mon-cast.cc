@@ -7403,14 +7403,6 @@ static bool _should_siren_sing(monster* mons, bool avatar)
 static void _doom_howl(monster &mon, int pow)
 {
     simple_monster_message(&mon, " unleashes a terrible howl!");
-
-    const int res_magic = you.check_res_magic(pow / ENCH_POW_FACTOR);
-    if (res_magic > 0)
-    {
-        mprf("You%s", you.resist_margin_phrase(res_magic).c_str());
-        return;
-    }
-
     mprf("The howling begins to echo in your mind!");
     you.duration[DUR_DOOM_HOWL] = 80 + random2(41);
 }

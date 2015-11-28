@@ -3660,7 +3660,7 @@ static const struct spell_desc spelldata[] =
 {
     SPELL_DOOM_HOWL, "Doom Howl",
     SPTYP_TRANSLOCATION | SPTYP_HEXES,
-    SPFLAG_DIR_OR_TARGET | SPFLAG_MR_CHECK,
+    SPFLAG_DIR_OR_TARGET,
     3,
     200,
     LOS_RADIUS, LOS_RADIUS,
