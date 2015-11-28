@@ -1895,6 +1895,7 @@ enum duration_type
     DUR_BRAINLESS,
     DUR_CLUMSY,
     DUR_DOOM_HOWL,
+    DUR_DOOM_HOWL_IMMUNITY,
     NUM_DURATIONS
 };
 

@@ -1188,9 +1188,13 @@ static void _decrement_durations()
     if (you.duration[DUR_DOOM_HOWL])
     {
         doom_howl(min(delay, you.duration[DUR_DOOM_HOWL]));
-        _decrement_a_duration(DUR_DOOM_HOWL, delay,
-                              "The infernal howling subsides.");
-    }
+        if (_decrement_a_duration(DUR_DOOM_HOWL, delay,
+                                  "The infernal howling subsides."))
+        {
+            you.duration[DUR_DOOM_HOWL_IMMUNITY] = random_range(30, 70);
+        }
+    } else
+        _decrement_a_duration(DUR_DOOM_HOWL_IMMUNITY, delay);
 
     if (_decrement_a_duration(DUR_GOZAG_GOLD_AURA, delay))
         you.props["gozag_gold_aura_amount"] = 0;

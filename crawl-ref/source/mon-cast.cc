@@ -7403,8 +7403,8 @@ static bool _should_siren_sing(monster* mons, bool avatar)
 static void _doom_howl(monster &mon, int pow)
 {
     simple_monster_message(&mon, " unleashes a terrible howl!");
-    mprf("The howling begins to echo in your mind!");
-    you.duration[DUR_DOOM_HOWL] = 80 + random2(41);
+    mpr("The howling begins to echo in your mind!");
+    you.duration[DUR_DOOM_HOWL] = random_range(80, 120);
 }
 
 /**
@@ -8022,7 +8022,8 @@ static bool _ms_waste_of_time(monster* mon, mon_spell_slot slot)
         return true;
 
     case SPELL_DOOM_HOWL:
-        return !foe || !foe->is_player() || you.duration[DUR_DOOM_HOWL];
+        return !foe || !foe->is_player() || you.duration[DUR_DOOM_HOWL]
+                || you.duration[DUR_DOOM_HOWL_IMMUNITY];
 
 #if TAG_MAJOR_VERSION == 34
     case SPELL_SUMMON_TWISTER:
