@@ -543,7 +543,24 @@ void do_dragon_call(int time)
  */
 void doom_howl(int time)
 {
-    const int hounds = div_rand_round(time, 40); // dubious
+    // TODO: pull hound-count generation into a helper function
+    int hounds = 0;
+    if (!you.props.exists(NEXT_DOOM_HOUND_KEY))
+        you.props[NEXT_DOOM_HOUND_KEY] = random_range(30, 50);
+    // 1 hound every 3-5 turns
+    while (time > 0)
+    {
+        const int time_to_hound = you.props[NEXT_DOOM_HOUND_KEY].get_int();
+        if (time_to_hound <= time)
+        {
+            you.props[NEXT_DOOM_HOUND_KEY] = random_range(30, 50);
+            ++hounds;
+        }
+        else
+            you.props[NEXT_DOOM_HOUND_KEY].get_int() -= time;
+        time -= time_to_hound;
+    }
+
     if (!hounds)
         return;
 

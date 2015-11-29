@@ -1191,6 +1191,7 @@ static void _decrement_durations()
         if (_decrement_a_duration(DUR_DOOM_HOWL, delay,
                                   "The infernal howling subsides."))
         {
+            you.props.erase(NEXT_DOOM_HOUND_KEY);
             you.duration[DUR_DOOM_HOWL_IMMUNITY] = random_range(30, 70);
         }
     } else

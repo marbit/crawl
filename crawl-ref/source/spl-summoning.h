@@ -19,6 +19,9 @@
 #define SW_READIED "sw_readied"
 #define SW_TRACKING "sw_tracking"
 
+// How many aut until the next doom hound pops out of doom howl?
+#define NEXT_DOOM_HOUND_KEY "next_doom_hound"
+
 spret_type cast_summon_butterflies(int pow, god_type god = GOD_NO_GOD,
                                    bool fail = false);
 spret_type cast_summon_small_mammal(int pow, god_type god, bool fail);
