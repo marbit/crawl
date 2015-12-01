@@ -773,7 +773,7 @@ menu_letter InvMenu::load_items(const vector<const item_def*> &mitems,
         string subtitle = item_class_name(i);
 
         // Mention the class selection shortcuts.
-        if (is_set(MF_MULTISELECT) && inv_class[i] > 1)
+        if (is_set(MF_MULTISELECT))
         {
             vector<char> glyphs;
             get_class_hotkeys(i, glyphs);
@@ -1624,6 +1624,13 @@ bool needs_handle_warning(const item_def &item, operation_types oper,
 
         if (is_artefact(item) && artefact_property(item, ARTP_DRAIN))
             return true;
+        if (item.is_type(OBJ_JEWELLERY, AMU_DISMISSAL))
+            return true;
+        if (item.is_type(OBJ_JEWELLERY, AMU_REGENERATION)
+            && player_mutation_level(MUT_SLOW_REGENERATION) < 3)
+        {
+            return true;
+        }
     }
 
     return false;
