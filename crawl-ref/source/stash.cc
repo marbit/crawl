@@ -1154,7 +1154,7 @@ void LevelStashes::move_stash(const coord_def& from, const coord_def& to)
 
     coord_def old_pos = s->pos;
     s->pos = to;
-    m_stashes.emplace(s->pos, *s);
+    m_stashes[s->pos] = *s;
     m_stashes.erase(old_pos);
 }
 
@@ -1869,9 +1869,7 @@ bool StashTracker::display_search_results(
         results = &results_filtered;
     }
     else
-    {
         results = &results_in;
-    }
 
     if (sort_by_dist)
         stable_sort(results->begin(), results->end(), _compare_by_distance);
