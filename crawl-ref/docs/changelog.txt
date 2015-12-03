@@ -1,5 +1,9 @@
-Stone Soup 0.18 (up to 0.18-a0-346-ga0a4001)
+Stone Soup 0.18 (up to 0.18-a0-592-g12a94aa)
 --------------------------------------------
+
+Highlights
+----------
+* New god: Pakellas the Inventive.
 
 Branches, Environment
 ---------------------
@@ -19,16 +23,42 @@ Character
 
 Gods
 ----
+* New god: Pakellas the Inventive. Pakellas is a temple god, with an altar
+  either in Temple or on D:2-9.
+  - Grants MP on kills (at about half the rate of Vehumet) and passive
+    wand charge identification.
+  - Blocks MP regeneration and hates channeling (staff of energy, crystal
+    ball of energy, the Staff of Wucad Mu, and Sublimation of Blood).
+  - Piety on kills.
+  - 1*: Quick Charge: spend 2/3 your current MP pool to add some charges
+    to a wand or rod proportional to your Evocations, your current MP pool,
+    and the capacity of the device.
+  - 3*: Device Surge: on your next use of an evocable item, spends 1-9 MP
+    to apply one to three enhancers to its power output, with maximum
+    MP and number of enhancers dependent on piety.
+  - Starting at 4*, Pakellas occasionally gifts rods, wands, and miscellaneous
+    evokables (always starting with a rod unless you are a felid).
+  - 6* capstone: Supercharge: sets a rod to +10 (18/18), or sets a wand's
+    capacity to 50% above normal for that wand type (in addition to recharging
+    it - this has the effect of improving Quick Charge's efficiency on the
+    wand).
 * Xom now chaos brands more weapon gifts, and can chaos brand ranged weapons
   again.
 * Finesse is no longer blocked by stasis.
 * Jiyva altars in Dungeon no longer appear as early in Dungeon.
 * Cheibriados now blocks chaos effects from hasting the player.
 * Piety given for a Ru sacrifice is more explicitly stated.
+* Abandoning Yredelemnul now destroys your zombie minions.
+* Followers of Elyvilon can pacify insects (again).
+* Zin's Recite is now only interrupted if the player is silenced or
+  incapacitated (or goes berserk).
 
 Items
 -----
 * New items:
+  - The amulet of dismissal, which has a chance of teleporting away enemies
+    that attack you in melee combat, and contaminates the player when it is
+    removed.
   - The +8 frozen axe "Frostbite" {freezing cloud, *Noise +Fly rC+}, an
     executioner's axe with a chance of placing freezing clouds on enemies it
     strikes.
@@ -39,8 +69,14 @@ Items
   - Pieces from Xom's chessboard - evoke to randomly swap the positions of
     you and all enemies and LOS, or (on failure) to trigger a Xom effect.
 * The robe of vines is now +2, Regen+7.
-* Amulets of stasis do not generate sound when blocking an effect.
 * The Majin-Bo now speaks occasionally.
+* The amulet of Cekugob is now an amulet of dismissal.
+* Removing an amulet of regeneration now causes 2-7 hp of rot.
+* A new property can now generate on random artefacts: Fragile, which destroys
+  the item when it is removed.
+* Amulets of faith now grant a 25% bonus to piety, not a 33% bonus.
+* Removed items:
+  - Amulets of resist mutation and warding.
 
 Monsters
 --------
@@ -57,7 +93,6 @@ Monsters
 * Jumping spiders and mana vipers can be blinded.
 * Jumping spiders cannot see invisible.
 * Giant eyeballs and golden eyes can now see invisible.
-* Monsters no longer lose rod power by wearing a shield.
 * Salamander stormcallers' chant does not need to be continuous; they now
   only need to try to cast Fire Storm at their target three times for it to
   trigger.
@@ -86,7 +121,7 @@ Spells
   all cancellable effects on the target and - if any were dispelled - causes
   a radius 1 explosion with damage proportional to the number of dispelled
   effects.
-* Sticks to Snakes now caps its maximum spell power at 100.
+* Hydra Form now has a fixed number of heads.
 
 Interface
 ---------
@@ -95,6 +130,9 @@ Interface
   on b by default.
 * An option is added to the butchering prompt to allow butchering only
   (e)dible corpses.
+* Auto-eat now triggers for ghouls if they are rotted.
+* The religion screen now shows all god powers, with currently accessible
+  powers (per level of piety) being highlighted.
 
 Stone Soup 0.17 (20151106)
 --------------------------

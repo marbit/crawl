@@ -1317,8 +1317,7 @@ void bolt::do_fire()
         if (!affects_nothing)
             affect_cell();
 
-        if (path_taken.empty() || pos() != path_taken.back())
-            path_taken.push_back(pos());
+        path_taken.push_back(pos());
 
         if (range_used() > range)
             break;
@@ -5404,7 +5403,8 @@ mon_resist_type bolt::apply_enchantment_to_monster(monster* mon)
             return MON_UNAFFECTED;
 
         obvious_effect = true;
-        const int duration = you.skill_rdiv(SK_INVOCATIONS, 3, 4) + 2;
+        const int duration =
+            player_adjust_invoc_power(you.skill_rdiv(SK_INVOCATIONS, 3, 4) + 2);
         mon->add_ench(mon_enchant(ENCH_SOUL_RIPE, 0, agent(),
                                   duration * BASELINE_DELAY));
         simple_monster_message(mon, "'s soul is now ripe for the taking.");
@@ -5905,9 +5905,6 @@ void bolt::refine_for_explosion()
     // gets burned by it anyway.  :)
     msg_generated = true;
 
-    // tmp needed so that what c_str() points to doesn't go out of scope
-    // before the function ends.
-    string tmp;
     if (item != nullptr)
     {
         seeMsg  = "The " + item->name(DESC_PLAIN, false, false, false)

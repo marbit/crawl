@@ -1372,8 +1372,7 @@ bool StashTracker::update_stash(const coord_def& c)
 
 void StashTracker::move_stash(const coord_def& from, const coord_def& to)
 {
-    LevelStashes *lev = find_current_level();
-    if (lev)
+    if (LevelStashes *lev = find_current_level())
         lev->move_stash(from, to);
 }
 
@@ -2067,7 +2066,7 @@ const ST_ItemIterator& ST_ItemIterator::operator ++ ()
     {
         if (m_shop_it == ls.m_shops.end())
         {
-            m_stash_level_it++;
+            ++m_stash_level_it;
             if (m_stash_level_it == StashTrack.levels.end())
                 return *this;
 
@@ -2085,7 +2084,7 @@ const ST_ItemIterator& ST_ItemIterator::operator ++ ()
             return *this;
         }
 
-        m_shop_it++;
+        ++m_shop_it;
         if (m_shop_it != ls.m_shops.end())
             m_shop_item_it = m_shop_it->items.begin();
 
@@ -2100,7 +2099,7 @@ const ST_ItemIterator& ST_ItemIterator::operator ++ ()
             return *this;
         }
 
-        m_stash_it++;
+        ++m_stash_it;
         if (m_stash_it == ls.m_stashes.end())
         {
             ++(*this);

@@ -3667,7 +3667,6 @@ bool handle_mon_spell(monster* mons, bolt &beem)
                     // unchivalric magic attacks, except against
                     // appropriate monsters.
                     if (find_stab_type(mons, foe) != STAB_NO_STAB
-                        && foe
                         && !tso_unchivalric_attack_safe_monster(foe->as_monster()))
                     {
                         spellOK = false;
