@@ -91,7 +91,7 @@ static void _maybe_throw_ally(const monster &mons);
 static int _throw_site_score(const monster &thrower, const actor &victim,
                              const coord_def &site);
 static void _siren_sing(monster* mons, bool avatar);
-static void _doom_howl(monster &mon, int pow);
+static void _doom_howl(monster &mon);
 static bool _ms_waste_of_time(monster* mon, mon_spell_slot slot);
 
 void init_mons_spells()
@@ -301,9 +301,6 @@ static int _mons_power_hd_factor(spell_type spell, bool random)
 
         case SPELL_SENTINEL_MARK:
             return 16 * ENCH_POW_FACTOR;
-
-        case SPELL_DOOM_HOWL:
-            return 12 * ENCH_POW_FACTOR;
 
         case SPELL_SAP_MAGIC:
         case SPELL_MESMERISE:
@@ -6528,7 +6525,7 @@ void mons_cast(monster* mons, bolt pbolt, spell_type spell_cast,
     }
 
     case SPELL_DOOM_HOWL:
-        _doom_howl(*mons, splpow);
+        _doom_howl(*mons);
         break;
     }
 
@@ -7432,12 +7429,10 @@ static bool _should_siren_sing(monster* mons, bool avatar)
  * Have a monster attempt to cast Doom Howl.
  *
  * @param mon   The howling monster.
- * @param pow   The power with which the 'spell' is being cast.
- *              (For resist chance)
  */
-static void _doom_howl(monster &mon, int pow)
+static void _doom_howl(monster &mon)
 {
-    simple_monster_message(&mon, " unleashes a terrible howl!");
+    simple_monster_message(&mon, " unleashes an unearthly howl!");
     mpr("The howling begins to echo in your mind!");
     you.duration[DUR_DOOM_HOWL] = random_range(80, 120);
 }
