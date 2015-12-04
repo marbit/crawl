@@ -1899,11 +1899,9 @@ static void _do_rest()
 
     if (i_feel_safe())
     {
-        if ((you.hp == you.hp_max
-                || player_mutation_level(MUT_SLOW_REGENERATION) == 3
-                || (you.species == SP_VAMPIRE
-                    && you.hunger_state <= HS_STARVING))
-            && you.magic_points == you.max_magic_points)
+        if ((you.hp == you.hp_max || !player_regenerates_hp())
+            && (you.magic_points == you.max_magic_points
+                || !player_regenerates_mp()))
         {
             mpr("You start waiting.");
             _start_running(RDIR_REST, RMODE_WAIT_DURATION);
@@ -2390,16 +2388,14 @@ static void _check_banished()
 
 static void _check_shafts()
 {
-    for (int i = 0; i < MAX_TRAPS; ++i)
+    for (auto& entry : env.trap)
     {
-        trap_def &trap = env.trap[i];
-
-        if (trap.type != TRAP_SHAFT)
+        if (entry.second.type != TRAP_SHAFT)
             continue;
 
-        ASSERT_IN_BOUNDS(trap.pos);
+        ASSERT_IN_BOUNDS(entry.first);
 
-        handle_items_on_shaft(trap.pos, true);
+        handle_items_on_shaft(entry.first, true);
     }
 }
 
@@ -2463,7 +2459,7 @@ static void _update_golubria_traps()
     vector<coord_def> traps = find_golubria_on_level();
     for (auto c : traps)
     {
-        trap_def *trap = find_trap(c);
+        trap_def *trap = trap_at(c);
         if (trap && trap->type == TRAP_GOLUBRIA)
         {
             if (--trap->ammo_qty <= 0)
@@ -2757,9 +2753,9 @@ static bool _cancel_confused_move(bool stationary)
         else
         {
             string name = bad_mons->name(DESC_PLAIN);
-            if (name.find("the ") == 0)
+            if (starts_with(name, "the "))
                name.erase(0, 4);
-            if (bad_adj.find("your") != 0)
+            if (!starts_with(bad_adj, "your"))
                bad_adj = "the " + bad_adj;
             prompt += bad_adj + name + bad_suff;
         }
@@ -2848,7 +2844,7 @@ static void _swing_at_target(coord_def move)
             mpr("You swing at nothing.");
         make_hungry(3, true);
         // Take the usual attack delay.
-        you.time_taken = you.attack_delay();
+        you.time_taken = you.attack_delay().roll();
     }
     you.turn_is_over = true;
     return;

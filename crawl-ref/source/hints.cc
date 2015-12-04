@@ -429,7 +429,7 @@ void hints_new_turn()
  * @param arg1 A string that can be inserted into the hint message.
  * @param arg2 Another string that can be inserted into the hint message.
  */
-void print_hint(string key, const string arg1, const string arg2)
+void print_hint(string key, const string& arg1, const string& arg2)
 {
     string text = getHintString(key);
     if (text.empty())
@@ -519,8 +519,6 @@ void hints_death_screen()
 // know by now.
 void hints_finished()
 {
-    string text;
-
     crawl_state.type = GAME_TYPE_NORMAL;
 
     print_hint("finished");
@@ -824,7 +822,7 @@ static bool _advise_use_wand()
 
 void hints_monster_seen(const monster& mon)
 {
-    if (!mons_class_gives_xp(mon.type))
+    if (mons_is_firewood(&mon))
     {
         if (Hints.hints_events[HINT_SEEN_ZERO_EXP_MON])
         {
@@ -2495,7 +2493,7 @@ void learned_something_new(hints_event_type seen_what, coord_def gc)
 
         // "Shouts" from zero experience monsters are boring, ignore
         // them.
-        if (!mons_class_gives_xp(m->type))
+        if (!mons_is_threatening(m))
         {
             Hints.hints_events[HINT_MONSTER_SHOUT] = true;
             return;
@@ -3653,7 +3651,7 @@ void hints_inscription_info(string prompt)
 //        but it's a lot more hit'n'miss now.
 bool hints_pos_interesting(int x, int y)
 {
-    return cloud_type_at(coord_def(x, y)) != CLOUD_NONE
+    return cloud_at(coord_def(x, y))
            || _water_is_disturbed(x, y)
            || _hints_feat_interesting(grd[x][y]);
 }
@@ -3902,11 +3900,12 @@ static void _hints_describe_feature(int x, int y)
 
 static void _hints_describe_cloud(int x, int y)
 {
-    cloud_type ctype = cloud_type_at(coord_def(x, y));
-    if (ctype == CLOUD_NONE)
+    cloud_struct* cloud = cloud_at(coord_def(x, y));
+    if (!cloud)
         return;
 
-    string cname = cloud_name_at_index(env.cgrid(coord_def(x, y)));
+    const string cname = cloud->cloud_name(true);
+    const cloud_type ctype = cloud->type;
 
     ostringstream ostr;
 
@@ -3948,7 +3947,7 @@ static void _hints_describe_cloud(int x, int y)
         }
     }
 
-    if (is_opaque_cloud(env.cgrid[x][y]))
+    if (is_opaque_cloud(ctype))
     {
         ostr << (need_cloud? "\nThis cloud" : "It")
              << " is opaque. If two or more opaque clouds are between "

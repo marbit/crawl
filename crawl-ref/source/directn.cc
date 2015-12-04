@@ -484,13 +484,14 @@ static void _draw_ray_glyph(const coord_def &pos, int colour,
 static bool _mon_exposed_in_water(const monster* mon)
 {
     return grd(mon->pos()) == DNGN_SHALLOW_WATER && !mon->airborne()
-           && env.cgrid(mon->pos()) == EMPTY_CLOUD;
+           && !cloud_at(mon->pos());
 }
 
 static bool _mon_exposed_in_cloud(const monster* mon)
 {
-    return is_opaque_cloud(env.cgrid(mon->pos())) && !mon->submerged()
-           && !mon->is_insubstantial();
+    return cloud_at(mon->pos())
+           && is_opaque_cloud(cloud_at(mon->pos())->type)
+           && !mon->submerged() && !mon->is_insubstantial();
 }
 
 static bool _mon_exposed(const monster* mon)
@@ -1190,9 +1191,12 @@ void direction_chooser::draw_beam_if_needed()
                     bcol = (*ri == target()) ? RED : MAGENTA;
                 else if (aff == AFF_YES)
                     bcol = (*ri == target()) ? LIGHTRED : LIGHTMAGENTA;
-                // shadow step landing sites
-                else
+                else if (aff == AFF_LANDING)
                     bcol = (*ri == target()) ? LIGHTGREEN : GREEN;
+                else if (aff == AFF_MULTIPLE)
+                    bcol = (*ri == target()) ? LIGHTCYAN : CYAN;
+                else
+                    die("unhandled aff %d", aff);
                 _draw_ray_glyph(*ri, bcol, '*', bcol | COLFLAG_REVERSE);
 #endif
             }
@@ -1432,9 +1436,8 @@ string direction_chooser::target_interesting_terrain_description() const
 
 string direction_chooser::target_cloud_description() const
 {
-    const int cloud = env.cgrid(target());
-    if (cloud != EMPTY_CLOUD)
-        return cloud_name_at_index(cloud);
+    if (cloud_struct* cloud = cloud_at(target()))
+        return cloud->cloud_name(true);
     else
         return "";
 }
@@ -2278,8 +2281,7 @@ static bool _mons_is_valid_target(const monster* mon, int mode, int range)
     // Monster types that you can't gain experience from don't count as
     // monsters.
     if (mode != TARG_EVOLVABLE_PLANTS
-        && mons_is_firewood(mon)
-        && !mons_is_active_ballisto(mon))
+        && !mons_is_threatening(mon))
     {
         return false;
     }
@@ -3539,12 +3541,14 @@ static bool _print_cloud_desc(const coord_def where)
              comma_separated_line(areas.begin(), areas.end()).c_str());
     }
 
-    if (env.cgrid(where) == EMPTY_CLOUD)
-        return false;
+    if (cloud_struct* cloud = cloud_at(where))
+    {
+        mprf(MSGCH_EXAMINE, "There is a cloud of %s here.",
+             cloud->cloud_name(true).c_str());
+        return true;
+    }
 
-    mprf(MSGCH_EXAMINE, "There is a cloud of %s here.",
-         cloud_name_at_index(env.cgrid(where)).c_str());
-    return true;
+    return false;
 }
 
 static bool _print_item_desc(const coord_def where)

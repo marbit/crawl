@@ -364,7 +364,7 @@ static vector<string> _get_skill_keys()
 
 static bool _monster_filter(string key, string body)
 {
-    monster_type mon_num = get_monster_by_name(key.c_str());
+    monster_type mon_num = get_monster_by_name(key);
     return mons_class_flag(mon_num, M_CANT_SPAWN)
            || mons_is_tentacle_segment(mon_num);
 }
@@ -1009,7 +1009,7 @@ static int _describe_cloud(const string &key, const string &suffix,
     const cloud_type cloud = cloud_name_to_type(cloud_name);
     ASSERT(cloud != NUM_CLOUD_TYPES);
 
-    const string extra_info = is_opaque_cloud_type(cloud) ?
+    const string extra_info = is_opaque_cloud(cloud) ?
         "\nThis cloud is opaque; one tile will not block vision, but "
         "multiple will."
         : "";

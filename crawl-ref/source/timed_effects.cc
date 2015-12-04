@@ -875,7 +875,7 @@ static void _jiyva_effects(int /*time_delta*/)
             while (grd(newpos) != DNGN_FLOOR
                        && grd(newpos) != DNGN_SHALLOW_WATER
                    || monster_at(newpos)
-                   || env.cgrid(newpos) != EMPTY_CLOUD
+                   || cloud_at(newpos)
                    || testbits(env.pgrid(newpos), FPROP_NO_JIYVA));
 
             mgen_data mg(MONS_JELLY, BEH_STRICT_NEUTRAL, 0, 0, 0, newpos,
@@ -951,7 +951,6 @@ static int _div(int num, int denom)
 
 struct timed_effect
 {
-    timed_effect_type effect;
     void              (*trigger)(int);
     int               min_time;
     int               max_time;
@@ -960,25 +959,25 @@ struct timed_effect
 
 static struct timed_effect timed_effects[] =
 {
-    { TIMER_CORPSES,       rot_floor_items,               200,   200, true  },
-    { TIMER_HELL_EFFECTS,  _hell_effects,                 200,   600, false },
-    { TIMER_SICKNESS,      _handle_sickness,              100,   300, false },
-    { TIMER_CONTAM,        _handle_magic_contamination,   200,   600, false },
+    { rot_floor_items,               200,   200, true  },
+    { _hell_effects,                 200,   600, false },
+    { _handle_sickness,              100,   300, false },
+    { _handle_magic_contamination,   200,   600, false },
 #if TAG_MAJOR_VERSION == 34
-    { TIMER_DETERIORATION, nullptr,                         0,     0, false },
+    { nullptr,                         0,     0, false },
 #endif
-    { TIMER_GOD_EFFECTS,   handle_god_time,               100,   300, false },
+    { handle_god_time,               100,   300, false },
 #if TAG_MAJOR_VERSION == 34
-    { TIMER_SCREAM, nullptr,                                0,     0, false },
+    { nullptr,                                0,     0, false },
 #endif
-    { TIMER_FOOD_ROT,      rot_inventory_food,            100,   300, false },
-    { TIMER_PRACTICE,      _wait_practice,                100,   300, false },
-    { TIMER_LABYRINTH,     _lab_change,                  1000,  3000, false },
-    { TIMER_ABYSS_SPEED,   _abyss_speed,                  100,   300, false },
-    { TIMER_JIYVA,         _jiyva_effects,                100,   300, false },
-    { TIMER_EVOLUTION,     _evolve,                      5000, 15000, false },
+    { rot_inventory_food,            100,   300, false },
+    { _wait_practice,                100,   300, false },
+    { _lab_change,                  1000,  3000, false },
+    { _abyss_speed,                  100,   300, false },
+    { _jiyva_effects,                100,   300, false },
+    { _evolve,                      5000, 15000, false },
 #if TAG_MAJOR_VERSION == 34
-    { TIMER_BRIBE_TIMEOUT, nullptr,                         0,     0, false },
+    { nullptr,                         0,     0, false },
 #endif
 };
 
@@ -1477,8 +1476,7 @@ void update_level(int elapsedTime)
     dprf("total monsters on level = %d", mons_total);
 #endif
 
-    for (int i = 0; i < MAX_CLOUDS; i++)
-        delete_cloud(i);
+    delete_all_clouds();
 }
 
 static void _recharge_rod(item_def &rod, int aut, bool in_inv)

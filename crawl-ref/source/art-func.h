@@ -23,7 +23,6 @@
 #include "beam.h"          // For Lajatang of Order's silver damage
 #include "cloud.h"         // For storm bow's and robe of clouds' rain
 #include "english.h"       // For apostrophise
-#include "env.h"           // For storm bow env.cgrid
 #include "fight.h"
 #include "food.h"          // For evokes
 #include "ghost.h"         // For is_dragonkind ghost_demon datas
@@ -482,6 +481,7 @@ static bool _WUCAD_MU_evoke(item_def *item, int* pract, bool* did_work,
     if (one_chance_in(4))
     {
         _wucad_miscast(&you, random2(9), random2(70));
+        did_god_conduct(DID_CHANNEL, 10, true);
         return false;
     }
 
@@ -492,6 +492,8 @@ static bool _WUCAD_MU_evoke(item_def *item, int* pract, bool* did_work,
 
     *pract    = 1;
     *did_work = true;
+
+    did_god_conduct(DID_CHANNEL, 10, true);
 
     return false;
 }
@@ -563,7 +565,7 @@ static void _STORM_BOW_world_reacts(item_def *item)
         return;
 
     for (radius_iterator ri(you.pos(), 2, C_SQUARE, LOS_SOLID); ri; ++ri)
-        if (!cell_is_solid(*ri) && env.cgrid(*ri) == EMPTY_CLOUD && one_chance_in(5))
+        if (!cell_is_solid(*ri) && !cloud_at(*ri) && one_chance_in(5))
             place_cloud(CLOUD_RAIN, *ri, random2(20), &you, 3);
 }
 
@@ -594,8 +596,7 @@ static void _RCLOUDS_world_reacts(item_def *item)
         cloud = CLOUD_MIST;
 
     for (radius_iterator ri(you.pos(), 2, C_SQUARE, LOS_SOLID); ri; ++ri)
-        if (!cell_is_solid(*ri) && env.cgrid(*ri) == EMPTY_CLOUD
-                && one_chance_in(20))
+        if (!cell_is_solid(*ri) && !cloud_at(*ri) && one_chance_in(20))
         {
             place_cloud(cloud, *ri, random2(10), &you, 1);
         }
@@ -635,7 +636,7 @@ static monster* _find_nearest_possible_beholder()
         monster *mon = monster_at(*di);
         if (mon && you.can_see(*mon)
             && you.possible_beholder(mon)
-            && !mons_class_flag(mon->type, M_NO_EXP_GAIN))
+            && mons_is_threatening(mon))
         {
             return mon;
         }
@@ -1315,7 +1316,7 @@ static void _ETHERIC_CAGE_world_reacts(item_def *item)
     ASSERT(delay > 0);
 
     // coinflip() chance of 1 MP per turn.
-    if (!(you.spirit_shield() && you.species == SP_DEEP_DWARF))
+    if (player_regenerates_mp())
         inc_mp(binomial(div_rand_round(delay, BASELINE_DELAY), 1, 2));
     // It's more interesting to get a lump of contamination then to just add a
     // small amount every turn, plus there's a small chance of rapid buildup.
@@ -1384,7 +1385,7 @@ static void _FROSTBITE_melee_effects(item_def* weapon, actor* attacker,
     coord_def spot = defender->pos();
     if (!mondied
         && !cell_is_solid(spot)
-        && env.cgrid(spot) == EMPTY_CLOUD
+        && !cloud_at(spot)
         && one_chance_in(5))
     {
          place_cloud(CLOUD_COLD, spot, random_range(3, 5), attacker, 0);

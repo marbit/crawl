@@ -792,17 +792,6 @@ public:
     }
 
     /**
-     * What brand type does this form attack with when unarmed?
-     */
-    brand_type get_uc_brand() const override
-    {
-        // thematic but probably irrelevant
-        if (you.species == SP_VAMPIRE)
-            return SPWPN_VAMPIRISM;
-        return Form::get_uc_brand();
-    }
-
-    /**
      * Find the player's base unarmed damage in this form.
      */
     int get_base_unarmed_damage() const override
@@ -1892,7 +1881,7 @@ bool transform(int pow, transformation_type which_trans, bool involuntary,
     case TRAN_SPIDER:
         if (you.attribute[ATTR_HELD])
         {
-            trap_def *trap = find_trap(you.pos());
+            trap_def *trap = trap_at(you.pos());
             if (trap && trap->type == TRAP_WEB)
             {
                 mpr("You disentangle yourself from the web.");
@@ -1914,7 +1903,7 @@ bool transform(int pow, transformation_type which_trans, bool involuntary,
     case TRAN_DRAGON:
         if (you.attribute[ATTR_HELD])
         {
-            trap_def *trap = find_trap(you.pos());
+            trap_def *trap = trap_at(you.pos());
             if (trap && trap->type == TRAP_WEB)
             {
                 mpr("You shred the web into pieces!");

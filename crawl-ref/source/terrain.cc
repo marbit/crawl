@@ -126,7 +126,7 @@ bool feat_is_branch_entrance(dungeon_feature_type feat)
     if (feat == DNGN_ENTER_HELL)
         return false;
 
-    for (branch_iterator it; it; it++)
+    for (branch_iterator it; it; ++it)
     {
         if (it->entry_stairs == feat
             && is_connected_branch(it->id))
@@ -145,7 +145,7 @@ bool feat_is_branch_exit(dungeon_feature_type feat)
     if (feat == DNGN_ENTER_HELL || feat == DNGN_EXIT_HELL)
         return false;
 
-    for (branch_iterator it; it; it++)
+    for (branch_iterator it; it; ++it)
     {
         if (it->exit_stairs == feat
             && is_connected_branch(it->id))
@@ -167,7 +167,7 @@ bool feat_is_portal_entrance(dungeon_feature_type feat)
     if (feat == DNGN_ENTER_ABYSS || feat == DNGN_ENTER_PANDEMONIUM)
         return false;
 
-    for (branch_iterator it; it; it++)
+    for (branch_iterator it; it; ++it)
     {
         if (it->entry_stairs == feat
             && !is_connected_branch(it->id))
@@ -190,7 +190,7 @@ bool feat_is_portal_exit(dungeon_feature_type feat)
     if (feat == DNGN_EXIT_ABYSS || feat == DNGN_EXIT_PANDEMONIUM)
         return false;
 
-    for (branch_iterator it; it; it++)
+    for (branch_iterator it; it; ++it)
     {
         if (it->exit_stairs == feat
             && !is_connected_branch(it->id))
@@ -464,6 +464,7 @@ static const pair<god_type, dungeon_feature_type> _god_altars[] =
     { GOD_GOZAG, DNGN_ALTAR_GOZAG },
     { GOD_QAZLAL, DNGN_ALTAR_QAZLAL },
     { GOD_RU, DNGN_ALTAR_RU },
+    { GOD_PAKELLAS, DNGN_ALTAR_PAKELLAS },
     { GOD_ECUMENICAL, DNGN_ALTAR_ECUMENICAL },
 };
 
@@ -926,31 +927,19 @@ void dgn_move_entities_at(coord_def src, coord_def dst,
     dungeon_feature_type dfeat = grd(src);
     if (dfeat == DNGN_ENTER_SHOP)
     {
-        if (shop_struct *s = get_shop(src))
-        {
-            env.tgrid(dst)    = env.tgrid(s->pos);
-            env.tgrid(s->pos) = NON_ENTITY;
-            // Can't leave the source square as a shop now that all
-            // the bookkeeping data has moved.
-            grd(src)          = DNGN_FLOOR;
-            s->pos = dst;
-        }
-        else // Destroy invalid shops.
-            dfeat = DNGN_FLOOR;
+        ASSERT(shop_at(src));
+        env.shop[dst] = env.shop[src];
+        env.shop[dst].pos = dst;
+        env.shop.erase(src);
+        grd(src) = DNGN_FLOOR;
     }
     else if (feat_is_trap(dfeat, true))
     {
-        if (trap_def *trap = find_trap(src))
-        {
-            env.tgrid(dst) = env.tgrid(trap->pos);
-            env.tgrid(trap->pos) = NON_ENTITY;
-            // Can't leave the source square as a trap now that all
-            // the bookkeeping data has moved.
-            grd(src)          = DNGN_FLOOR;
-            trap->pos = dst;
-        }
-        else // Destroy invalid traps.
-            dfeat = DNGN_FLOOR;
+        ASSERT(trap_at(src));
+        env.trap[dst] = env.trap[src];
+        env.trap[dst].pos = dst;
+        env.trap.erase(src);
+        grd(src) = DNGN_FLOOR;
     }
 
     grd(dst) = dfeat;
@@ -986,13 +975,9 @@ void dgn_move_entities_at(coord_def src, coord_def dst,
         move_item_stack_to_grid(src, dst);
 
     if (cell_is_solid(dst))
-    {
-        int cl = env.cgrid(dst);
-        if (cl != EMPTY_CLOUD)
-            delete_cloud(cl);
-    }
+        delete_cloud(src);
     else
-        move_cloud_to(src, dst);
+        move_cloud(src, dst);
 
     // Move terrain colours and properties.
     env.pgrid(dst) = env.pgrid(src);
@@ -1269,11 +1254,11 @@ bool swap_features(const coord_def &pos1, const coord_def &pos2,
     const terrain_property_t prop1 = env.pgrid(pos1);
     const terrain_property_t prop2 = env.pgrid(pos2);
 
-    trap_def* trap1 = find_trap(pos1);
-    trap_def* trap2 = find_trap(pos2);
+    trap_def* trap1 = trap_at(pos1);
+    trap_def* trap2 = trap_at(pos2);
 
-    shop_struct* shop1 = get_shop(pos1);
-    shop_struct* shop2 = get_shop(pos2);
+    shop_struct* shop1 = shop_at(pos1);
+    shop_struct* shop2 = shop_at(pos2);
 
     // Find a temporary holding place for pos1 stuff to be moved to
     // before pos2 is moved to pos1.
@@ -1288,7 +1273,7 @@ bool swap_features(const coord_def &pos1, const coord_def &pos2,
 
             if (!env.markers.find(pos, MAT_ANY)
                 && !is_notable_terrain(grd(pos))
-                && env.cgrid(pos) == EMPTY_CLOUD)
+                && !cloud_at(pos))
             {
                 temp = pos;
                 break;
@@ -1330,16 +1315,48 @@ bool swap_features(const coord_def &pos1, const coord_def &pos2,
     env.grid_colours(pos2) = col1;
 
     // Swap traps.
-    if (trap1)
-        trap1->pos = pos2;
-    if (trap2)
-        trap2->pos = pos1;
+    if (trap1 && !trap2)
+    {
+        env.trap[pos2] = env.trap[pos1];
+        env.trap[pos2].pos = pos2;
+        env.trap.erase(pos1);
+    }
+    else if (!trap1 && trap2)
+    {
+        env.trap[pos1] = env.trap[pos2];
+        env.trap[pos1].pos = pos1;
+        env.trap.erase(pos2);
+    }
+    else if (trap1 && trap2)
+    {
+        trap_def tmp = env.trap[pos1];
+        env.trap[pos1] = env.trap[pos2];
+        env.trap[pos2] = tmp;
+        env.trap[pos1].pos = pos1;
+        env.trap[pos2].pos = pos2;
+    }
 
     // Swap shops.
-    if (shop1)
-        shop1->pos = pos2;
-    if (shop2)
-        shop2->pos = pos1;
+    if (shop1 && !shop2)
+    {
+        env.shop[pos2] = env.shop[pos1];
+        env.shop[pos2].pos = pos2;
+        env.shop.erase(pos1);
+    }
+    else if (!shop1 && shop2)
+    {
+        env.shop[pos1] = env.shop[pos2];
+        env.shop[pos1].pos = pos1;
+        env.shop.erase(pos2);
+    }
+    else if (shop1 && shop2)
+    {
+        shop_struct tmp = env.shop[pos1];
+        env.shop[pos1] = env.shop[pos2];
+        env.shop[pos2] = tmp;
+        env.shop[pos1].pos = pos1;
+        env.shop[pos2].pos = pos2;
+    }
 
     if (!swap_everything)
     {
@@ -1385,10 +1402,7 @@ bool swap_features(const coord_def &pos1, const coord_def &pos2,
         menv[mgrd(pos2)].clear_far_constrictions();
     }
 
-    // Swap clouds.
-    move_cloud(env.cgrid(pos1), temp);
-    move_cloud(env.cgrid(pos2), pos1);
-    move_cloud(env.cgrid(temp), pos2);
+    swap_clouds(pos1, pos2);
 
     if (pos1 == you.pos())
     {
@@ -1424,7 +1438,7 @@ static bool _ok_dest_cell(const actor* orig_actor,
     if (is_notable_terrain(dest_feat))
         return false;
 
-    if (find_trap(dest_pos))
+    if (trap_at(dest_pos))
         return false;
 
     actor* dest_actor = actor_at(dest_pos);
@@ -1815,11 +1829,7 @@ const char* feat_type_name(dungeon_feature_type feat)
 void set_terrain_changed(const coord_def p)
 {
     if (cell_is_solid(p))
-    {
-        int cl = env.cgrid(p);
-        if (cl != EMPTY_CLOUD)
-            delete_cloud(cl);
-    }
+        delete_cloud(p);
 
     if (grd(p) == DNGN_SLIMY_WALL)
         env.level_state |= LSTATE_SLIMY_WALL;

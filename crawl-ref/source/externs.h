@@ -312,6 +312,9 @@ struct cloud_struct
                      name(""), tile(""), excl_rad(-1)
     {
     }
+    cloud_struct(coord_def p, cloud_type c, int d, int spread, kill_category kc,
+                 killer_type kt, mid_t src, int clr, string name_, string tile_,
+                 int excl);
 
     bool defined() const { return type != CLOUD_NONE; }
     bool temporary() const { return excl_rad == -1; }
@@ -321,7 +324,7 @@ struct cloud_struct
     void set_whose(kill_category _whose);
     void set_killer(killer_type _killer);
 
-    string cloud_name(const string &default_name = "", bool terse = false) const;
+    string cloud_name(bool terse = false) const;
     void announce_actor_engulfed(const actor *engulfee,
                                  bool beneficial = false) const;
 
@@ -342,6 +345,9 @@ struct shop_struct
     FixedVector<uint8_t, 3> keeper_name;
 
     vector<item_def> stock;
+#if TAG_MAJOR_VERSION == 34
+    uint8_t num; // used in a save compat hack
+#endif
 
     shop_struct () : pos(), greed(0), type(SHOP_UNASSIGNED), level(0),
                      shop_name(""), shop_type_name(""), shop_suffix_name("") { }
@@ -713,12 +719,12 @@ typedef vector<delay_queue_item> delay_queue_type;
 enum mon_spell_slot_flag
 {
     MON_SPELL_NO_FLAGS  = 0,
-    MON_SPELL_EMERGENCY = 1 << 0, // only use this spell slot in emergencies
-    MON_SPELL_NATURAL   = 1 << 1, // physiological, not really a spell
-    MON_SPELL_MAGICAL   = 1 << 2, // a generic magical ability
-    MON_SPELL_DEMONIC   = 1 << 3, // demonic
-    MON_SPELL_WIZARD    = 1 << 4, // a real spell, affected by AM and silence
-    MON_SPELL_PRIEST    = 1 << 5,
+    MON_SPELL_EMERGENCY   = 1 <<  0, // only use this spell slot in emergencies
+    MON_SPELL_NATURAL     = 1 <<  1, // physiological, not really a spell
+    MON_SPELL_MAGICAL     = 1 <<  2, // a generic magical ability
+    MON_SPELL_DEMONIC     = 1 <<  3, // demonic
+    MON_SPELL_WIZARD      = 1 <<  4, // a real spell, affected by AM and silence
+    MON_SPELL_PRIEST      = 1 <<  5,
 
     MON_SPELL_FIRST_CATEGORY = MON_SPELL_NATURAL,
     MON_SPELL_LAST_CATEGORY  = MON_SPELL_PRIEST,
@@ -731,18 +737,21 @@ enum mon_spell_slot_flag
     MON_SPELL_ANTIMAGIC_MASK = MON_SPELL_MAGICAL | MON_SPELL_DEMONIC
                              | MON_SPELL_WIZARD,
 
-    MON_SPELL_BREATH    = 1 << 6, // sets a breath timer, requires it to be 0
-    MON_SPELL_NO_SILENT = 1 << 7, // can't be used while silenced/mute/etc.
+    MON_SPELL_BREATH      = 1 <<  6, // sets a breath timer, requires it to be 0
+    MON_SPELL_NO_SILENT   = 1 <<  7, // can't be used while silenced/mute/etc.
 
     MON_SPELL_SILENCE_MASK = MON_SPELL_WIZARD | MON_SPELL_PRIEST
                              | MON_SPELL_NO_SILENT,
 
-    MON_SPELL_INSTANT   = 1 << 8, // allows another action on the same turn
-    MON_SPELL_NOISY     = 1 << 9, // makes noise despite being innate
+    MON_SPELL_INSTANT     = 1 <<  8, // allows another action on the same turn
+    MON_SPELL_NOISY       = 1 <<  9, // makes noise despite being innate
 
-    MON_SPELL_LAST_FLAG = MON_SPELL_NOISY,
+    MON_SPELL_SHORT_RANGE = 1 << 10, // only use at short distances
+    MON_SPELL_LONG_RANGE  = 1 << 11, // only use at long distances
+
+    MON_SPELL_LAST_FLAG = MON_SPELL_LONG_RANGE,
 };
-DEF_BITFIELD(mon_spell_slot_flags, mon_spell_slot_flag, 9);
+DEF_BITFIELD(mon_spell_slot_flags, mon_spell_slot_flag, 11);
 const int MON_SPELL_LAST_EXPONENT = mon_spell_slot_flags::last_exponent;
 COMPILE_CHECK(mon_spell_slot_flags::exponent(MON_SPELL_LAST_EXPONENT)
               == MON_SPELL_LAST_FLAG);

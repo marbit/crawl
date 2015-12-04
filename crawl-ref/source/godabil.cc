@@ -291,7 +291,6 @@ bool zin_donate_gold()
         mpr(result);
     }
 
-    zin_recite_interrupt();
     return true;
 }
 
@@ -549,7 +548,7 @@ string zin_recite_text(const int seed, const int prayertype, int step)
     {
         step = abs(step-3);
         if (step > 3)
-            step = 0;
+            step = 1;
     }
     else
     {
@@ -720,8 +719,9 @@ int zin_recite_power()
     // Resistance is now based on HD.
     // You can affect up to (30+30)/2 = 30 'power' (HD).
     const int power_mult = 10;
-    const int invo_power = you.skill_rdiv(SK_INVOCATIONS, power_mult)
-                           + 3 * power_mult;
+    const int invo_power =
+        player_adjust_invoc_power(you.skill_rdiv(SK_INVOCATIONS, power_mult)
+                                  + 3 * power_mult);
     const int piety_power = you.piety * 3 / 2;
     return (invo_power + piety_power) / 2 / power_mult;
 }
@@ -1274,23 +1274,14 @@ static void _zin_saltify(monster* mon)
     }
 }
 
-void zin_recite_interrupt()
-{
-    if (!you.duration[DUR_RECITE])
-        return;
-    mprf(MSGCH_DURATION, "Your recitation is interrupted.");
-    mpr("You feel short of breath.");
-    you.duration[DUR_RECITE] = 0;
-
-    you.increase_duration(DUR_BREATH_WEAPON, random2(10) + random2(30));
-}
-
 bool zin_vitalisation()
 {
+    surge_power(you.spec_invoc(), "divine");
     simple_god_message(" grants you divine stamina.");
 
     // Add divine stamina.
-    const int stamina_amt = max(1, you.skill_rdiv(SK_INVOCATIONS, 1, 3));
+    const int stamina_amt =
+        max(1, player_adjust_invoc_power(you.skill_rdiv(SK_INVOCATIONS, 1, 3)));
     you.attribute[ATTR_DIVINE_STAMINA] = stamina_amt;
     you.set_duration(DUR_DIVINE_STAMINA, 60 + roll_dice(2, 10));
 
@@ -1321,7 +1312,6 @@ bool zin_remove_all_mutations()
         canned_msg(MSG_OK);
         return false;
     }
-    zin_recite_interrupt();
     flash_view(UA_PLAYER, WHITE);
 #ifndef USE_TILE_LOCAL
     // Allow extra time for the flash to linger.
@@ -1339,7 +1329,8 @@ void zin_sanctuary()
 {
     ASSERT(!env.sanctuary_time);
 
-    zin_recite_interrupt();
+    surge_power(you.spec_invoc(), "divine");
+
     // Yes, shamelessly stolen from NetHack...
     if (!silenced(you.pos())) // How did you manage that?
         mprf(MSGCH_SOUND, "You hear a choir sing!");
@@ -1355,7 +1346,10 @@ void zin_sanctuary()
 
     // Pets stop attacking and converge on you.
     you.pet_target = MHITYOU;
-    create_sanctuary(you.pos(), 7 + you.skill_rdiv(SK_INVOCATIONS) / 2);
+    create_sanctuary(you.pos(),
+                     player_adjust_invoc_power(
+                         7 + you.skill_rdiv(SK_INVOCATIONS) / 2));
+
 }
 
 // shield bonus = attribute for duration turns, then decreasing by 1
@@ -1364,6 +1358,7 @@ void zin_sanctuary()
 // recasting simply resets those two values (to better values, presumably)
 void tso_divine_shield()
 {
+    surge_power(you.spec_invoc(), "divine");
     if (!you.duration[DUR_DIVINE_SHIELD])
     {
         if (you.shield()
@@ -1382,10 +1377,12 @@ void tso_divine_shield()
 
     // duration of complete shield bonus from 35 to 80 turns
     you.set_duration(DUR_DIVINE_SHIELD,
-                     35 + you.skill_rdiv(SK_INVOCATIONS, 4, 3));
+                     player_adjust_invoc_power(
+                         35 + you.skill_rdiv(SK_INVOCATIONS, 4, 3)));
 
     // affects size of SH bonus, decreases near end of duration
-    you.attribute[ATTR_DIVINE_SHIELD] = 3 + you.skill_rdiv(SK_INVOCATIONS, 1, 5);
+    you.attribute[ATTR_DIVINE_SHIELD] =
+        player_adjust_invoc_power(3 + you.skill_rdiv(SK_INVOCATIONS, 1, 5));
 
     you.redraw_armour_class = true;
 }
@@ -1416,18 +1413,21 @@ void elyvilon_purification()
 bool elyvilon_divine_vigour()
 {
     bool success = false;
+    surge_power(you.spec_invoc(), "divine");
 
     if (!you.duration[DUR_DIVINE_VIGOUR])
     {
         mprf("%s grants you divine vigour.",
              god_name(GOD_ELYVILON).c_str());
 
-        const int vigour_amt = 1 + you.skill_rdiv(SK_INVOCATIONS, 1, 3);
+        const int vigour_amt =
+            player_adjust_invoc_power(1 + you.skill_rdiv(SK_INVOCATIONS, 1, 3));
         const int old_hp_max = you.hp_max;
         const int old_mp_max = you.max_magic_points;
         you.attribute[ATTR_DIVINE_VIGOUR] = vigour_amt;
         you.set_duration(DUR_DIVINE_VIGOUR,
-                         40 + you.skill_rdiv(SK_INVOCATIONS, 5, 2));
+                         player_adjust_invoc_power(
+                             40 + you.skill_rdiv(SK_INVOCATIONS, 5, 2)));
 
         calc_hp();
         inc_hp((you.hp_max * you.hp + old_hp_max - 1)/old_hp_max - you.hp);
@@ -1510,7 +1510,7 @@ bool trog_burn_spellbooks()
 
     for (radius_iterator ri(you.pos(), LOS_DEFAULT); ri; ++ri)
     {
-        const unsigned short cloud = env.cgrid(*ri);
+        cloud_struct* cloud = cloud_at(*ri);
         int count = 0;
         int rarity = 0;
         for (stack_iterator si(*ri); si; ++si)
@@ -1521,7 +1521,7 @@ bool trog_burn_spellbooks()
             // If a grid is blocked, books lying there will be ignored.
             // Allow bombing of monsters.
             if (cell_is_solid(*ri)
-                || cloud != EMPTY_CLOUD && env.cloud[cloud].type != CLOUD_FIRE)
+                || cloud && cloud->type != CLOUD_FIRE)
             {
                 totalblocked++;
                 continue;
@@ -1555,13 +1555,13 @@ bool trog_burn_spellbooks()
 
         if (count)
         {
-            if (cloud != EMPTY_CLOUD)
+            if (cloud)
             {
                 // Reinforce the cloud.
                 mpr("The fire roars with new energy!");
                 const int extra_dur = count + random2(rarity / 2);
-                env.cloud[cloud].decay += extra_dur * 5;
-                env.cloud[cloud].set_whose(KC_YOU);
+                cloud->decay += extra_dur * 5;
+                cloud->set_whose(KC_YOU);
                 continue;
             }
 
@@ -3045,7 +3045,10 @@ bool fedhas_plant_ring_from_fruit()
         return false;
     }
 
-    const int hp_adjust = you.skill(SK_INVOCATIONS, 10);
+    surge_power(you.spec_invoc(), "divine");
+
+    const int hp_adjust =
+        player_adjust_invoc_power(you.skill(SK_INVOCATIONS, 10));
 
     // The user entered a number, remove all number overlays which
     // are higher than that number.
@@ -3098,6 +3101,8 @@ int fedhas_rain(const coord_def &target)
 {
     int spawned_count = 0;
     int processed_count = 0;
+
+    surge_power(you.spec_invoc(), "divine");
 
     for (radius_iterator rad(target, LOS_NO_TRANS, true); rad; ++rad)
     {
@@ -3167,7 +3172,9 @@ int fedhas_rain(const coord_def &target)
             // per tile is 24 * p = expected. Say an Invocations skill
             // of 27 gives expected 6 clouds.
             int max_expected = 6;
-            int expected = you.skill_rdiv(SK_INVOCATIONS, max_expected, 27);
+            int expected =
+                player_adjust_invoc_power(
+                    you.skill_rdiv(SK_INVOCATIONS, max_expected, 27));
 
             if (x_chance_in_y(expected, 24))
             {
@@ -3416,6 +3423,8 @@ spret_type fedhas_evolve_flora(bool fail)
 
     fail_check();
 
+    surge_power(you.spec_invoc(), "divine");
+
     switch (upgrade.new_type)
     {
     case MONS_OKLOB_PLANT:
@@ -3425,7 +3434,8 @@ spret_type fedhas_evolve_flora(bool fail)
         else
         {
             string evolve_desc = " can now spit acid";
-            const int skill = you.skill(SK_INVOCATIONS);
+            const int skill =
+                player_adjust_invoc_power(you.skill(SK_INVOCATIONS));
             if (skill >= 20)
                 evolve_desc += " continuously";
             else if (skill >= 15)
@@ -3481,7 +3491,8 @@ spret_type fedhas_evolve_flora(bool fail)
     }
 
     plant->set_hit_dice(plant->get_experience_level()
-                        + you.skill_rdiv(SK_INVOCATIONS));
+                        + player_adjust_invoc_power(
+                              you.skill_rdiv(SK_INVOCATIONS)));
 
     if (upgrade.fruit_cost)
         _decrease_amount(collected_fruit, upgrade.fruit_cost);
@@ -3535,9 +3546,10 @@ static void _lugonu_warp_area(int pow)
 
 void lugonu_bend_space()
 {
-    const int pow = 4 + skill_bump(SK_INVOCATIONS);
+    const int pow = player_adjust_invoc_power(4 + skill_bump(SK_INVOCATIONS));
     const bool area_warp = random2(pow) > 9;
 
+    surge_power(you.spec_invoc(), "divine");
     mprf("Space bends %saround you!", area_warp ? "sharply " : "");
 
     if (area_warp)
@@ -3907,7 +3919,7 @@ bool dithmenos_shadow_step()
 
         if (!zot_trap_prompted)
         {
-            trap_def* trap = find_trap(site);
+            trap_def* trap = trap_at(site);
             if (trap && env.grid(site) != DNGN_UNDISCOVERED_TRAP
                 && trap->type == TRAP_ZOT)
             {
@@ -4316,7 +4328,7 @@ bool gozag_potion_petition()
             for (const CrawlStoreValue& store : *pots[i])
                 pot_names.emplace_back(potion_type_name(store.get_int()));
             line += comma_separated_line(pot_names.begin(), pot_names.end());
-            mpr_nojoin(MSGCH_PLAIN, line.c_str());
+            mpr_nojoin(MSGCH_PLAIN, line);
         }
         mprf(MSGCH_PROMPT, "Purchase which effect?");
         keyin = toalower(get_ch()) - 'a';
@@ -4619,7 +4631,7 @@ static void _gozag_place_shop(int index)
     env.markers.add(new map_feature_marker(you.pos(), DNGN_ABANDONED_SHOP));
     env.markers.clear_need_activate();
 
-    shop_struct *shop = get_shop(you.pos());
+    shop_struct *shop = shop_at(you.pos());
     ASSERT(shop);
 
     const gender_type gender = random_choose(GENDER_FEMALE, GENDER_MALE,
@@ -4880,7 +4892,7 @@ static int _upheaval_radius(int pow)
 
 spret_type qazlal_upheaval(coord_def target, bool quiet, bool fail)
 {
-    int pow = you.skill(SK_INVOCATIONS, 6);
+    int pow = player_adjust_invoc_power(you.skill(SK_INVOCATIONS, 6));
     const int max_radius = _upheaval_radius(pow);
 
     bolt beam;
@@ -4926,6 +4938,8 @@ spret_type qazlal_upheaval(coord_def target, bool quiet, bool fail)
         beam.target = target;
 
     fail_check();
+    if (!quiet)
+        surge_power(you.spec_invoc(), "divine");
 
     string message = "";
 
@@ -5014,8 +5028,7 @@ spret_type qazlal_upheaval(coord_def target, bool quiet, bool fail)
                 }
                 break;
             case BEAM_AIR:
-                if (!cell_is_solid(pos) && env.cgrid(pos) == EMPTY_CLOUD
-                    && coinflip())
+                if (!cell_is_solid(pos) && !cloud_at(pos) && coinflip())
                 {
                     place_cloud(CLOUD_STORM, pos,
                                 random2(you.skill_rdiv(SK_INVOCATIONS, 1, 4)),
@@ -5054,9 +5067,9 @@ void qazlal_elemental_force()
     vector<coord_def> targets;
     for (radius_iterator ri(you.pos(), LOS_RADIUS, C_SQUARE, true); ri; ++ri)
     {
-        if (env.cgrid(*ri) != EMPTY_CLOUD)
+        if (cloud_struct* cloud = cloud_at(*ri))
         {
-            switch (env.cloud[env.cgrid(*ri)].type)
+            switch (cloud->type)
             {
             case CLOUD_FIRE:
             case CLOUD_COLD:
@@ -5083,9 +5096,12 @@ void qazlal_elemental_force()
         return;
     }
 
+    surge_power(you.spec_invoc(), "divine");
+
     shuffle_array(targets);
     const int count = max(1, min((int)targets.size(),
-                                 random2avg(you.skill(SK_INVOCATIONS), 2)));
+                                 player_adjust_invoc_power(
+                                     random2avg(you.skill(SK_INVOCATIONS), 2))));
     mgen_data mg;
     mg.summon_type = MON_SUMM_AID;
     mg.abjuration_duration = 1;
@@ -5094,9 +5110,8 @@ void qazlal_elemental_force()
     for (unsigned int i = 0; placed < count && i < targets.size(); i++)
     {
         coord_def pos = targets[i];
-        const unsigned short cloud = env.cgrid(pos);
-        ASSERT(cloud != EMPTY_CLOUD);
-        cloud_struct &cl = env.cloud[cloud];
+        ASSERT(cloud_at(pos));
+        cloud_struct &cl = *cloud_at(pos);
         actor *agent = actor_by_mid(cl.source);
         mg.behaviour = !agent             ? BEH_NEUTRAL :
                        agent->is_player() ? BEH_FRIENDLY
@@ -5128,7 +5143,7 @@ void qazlal_elemental_force()
         }
         if (!create_monster(mg))
             continue;
-        delete_cloud(cloud);
+        delete_cloud(pos);
         placed++;
     }
 
@@ -5143,7 +5158,7 @@ bool qazlal_disaster_area()
     bool friendlies = false;
     vector<coord_def> targets;
     vector<int> weights;
-    const int pow = you.skill(SK_INVOCATIONS, 6);
+    const int pow = player_adjust_invoc_power(you.skill(SK_INVOCATIONS, 6));
     const int upheaval_radius = _upheaval_radius(pow);
     for (radius_iterator ri(you.pos(), LOS_RADIUS, C_SQUARE, LOS_NO_TRANS, true);
          ri; ++ri)
@@ -5186,6 +5201,7 @@ bool qazlal_disaster_area()
         return false;
     }
 
+    surge_power(you.spec_invoc(), "divine");
     mprf(MSGCH_GOD, "Nature churns violently around you!");
 
     int count = max(1, min((int)targets.size(),
@@ -6133,7 +6149,7 @@ bool ru_do_sacrifice(ability_type sac)
             _ru_kill_skill(SK_BOWS);
     }
 
-    mark_milestone("sacrifice", mile_text.c_str());
+    mark_milestone("sacrifice", mile_text);
 
     // Any special handling that's needed.
     _extra_sacrifice_code(sac);
@@ -6273,7 +6289,7 @@ void ru_draw_out_power()
     int net = get_trapping_net(you.pos());
     if (net == NON_ITEM)
     {
-        trap_def *trap = find_trap(you.pos());
+        trap_def *trap = trap_at(you.pos());
         if (trap && trap->type == TRAP_WEB)
         {
             destroy_trap(you.pos());
@@ -6532,5 +6548,43 @@ bool ru_apocalypse()
     noisy(30, you.pos());
     apply_area_visible(_apply_apocalypse, you.pos());
     drain_player(100, false, true);
+    return true;
+}
+
+bool pakellas_check_quick_charge(bool quiet)
+{
+    if (!enough_mp(1, quiet))
+        return false;
+
+    if (!any_items_of_type(OSEL_RECHARGE))
+    {
+        if (!quiet)
+            mpr(no_selectables_message(OSEL_RECHARGE));
+        return false;
+    }
+
+    return true;
+}
+
+bool pakellas_device_surge()
+{
+    if (!you_worship(GOD_PAKELLAS) || !you.duration[DUR_DEVICE_SURGE])
+        return true;
+
+    const int mp = min(you.magic_points, min(9, max(3,
+                       1 + random2avg(you.piety * 9 / piety_breakpoint(5),
+                                      2))));
+
+    const int severity = div_rand_round(mp, 3);
+    dec_mp(mp);
+
+    you.attribute[ATTR_PAKELLAS_DEVICE_SURGE] = severity;
+    you.duration[DUR_DEVICE_SURGE] = 0;
+    if (severity == 0)
+    {
+        mprf(MSGCH_GOD, "The surge fizzles.");
+        return false;
+    }
+
     return true;
 }

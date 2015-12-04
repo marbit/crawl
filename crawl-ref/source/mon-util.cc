@@ -640,7 +640,7 @@ bool mons_gives_xp(const monster* victim, const actor* agent)
     ASSERT(victim && agent);
 
     // Either the player killed a monster that's no reward (created friendly or
-    // the royal jelly spawns), or a monster killed an aligned monster, or a
+    // the Royal Jelly spawns), or a monster killed an aligned monster, or a
     // friendly monster killed a no-reward monster.
     bool killed_friend;
     if (agent->is_player())
@@ -657,6 +657,16 @@ bool mons_gives_xp(const monster* victim, const actor* agent)
         && mons_class_gives_xp(victim->type)        // class must reward xp
         && !testbits(victim->flags, MF_WAS_NEUTRAL) // no neutral monsters
         && !killed_friend;
+}
+
+bool mons_class_is_threatening(monster_type mo)
+{
+    return !mons_class_flag(mo, M_NO_THREAT);
+}
+
+bool mons_is_threatening(const monster *mons)
+{
+    return mons_class_is_threatening(mons->type) || mons_is_active_ballisto(mons);
 }
 
 /**
@@ -682,7 +692,7 @@ bool mons_is_active_ballisto(const monster* mon)
 bool mons_class_is_firewood(monster_type mc)
 {
     return mons_class_is_stationary(mc)
-           && mons_class_flag(mc, M_NO_EXP_GAIN)
+           && mons_class_flag(mc, M_NO_THREAT)
            && !mons_is_tentacle_or_tentacle_segment(mc);
 }
 
@@ -1023,7 +1033,7 @@ bool mons_is_statue(monster_type mc)
  */
 static void _mimic_vanish(const coord_def& pos, const string& name)
 {
-    const bool can_place_smoke = env.cgrid(pos) == EMPTY_CLOUD;
+    const bool can_place_smoke = !cloud_at(pos);
     if (can_place_smoke)
         place_cloud(CLOUD_BLACK_SMOKE, pos, 2 + random2(2), nullptr);
     if (!you.see_cell(pos))
@@ -4037,7 +4047,7 @@ bool mons_can_traverse(const monster* mon, const coord_def& p,
     if (!mon->is_habitable(p))
         return false;
 
-    const trap_def* ptrap = find_trap(p);
+    const trap_def* ptrap = trap_at(p);
     if (checktraps && ptrap)
     {
         const trap_type tt = ptrap->type;
@@ -4637,7 +4647,7 @@ int get_dist_to_nearest_monster()
             continue;
 
         // Plants/fungi don't count.
-        if (!mons_class_gives_xp(mon->type) && !mons_is_active_ballisto(mon))
+        if (!mons_is_threatening(mon))
             continue;
 
         if (mon->wont_attack())

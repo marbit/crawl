@@ -3077,8 +3077,7 @@ static coord_def _mons_conjure_flame_pos(monster* mon, actor* foe)
             continue;
         }
 
-        const int cloud = env.cgrid(*di);
-        if (cloud != EMPTY_CLOUD)
+        if (cloud_at(*di))
             continue;
 
         // Conjure flames *behind* the target; blocking the target from
@@ -3094,8 +3093,7 @@ static coord_def _mons_conjure_flame_pos(monster* mon, actor* foe)
         for (adjacent_iterator ai(*di); ai; ++ai)
         {
             if (feat_is_traversable(grd(*ai))
-                && (env.cgrid(*ai) == EMPTY_CLOUD
-                    || !is_damaging_cloud(env.cloud[env.cgrid(*ai)].type)))
+                && is_damaging_cloud(cloud_type_at(*ai)))
             {
                 floor_count++;
             }
@@ -3244,6 +3242,34 @@ static spell_type _pick_spell_from_list(const monster_spells &spells,
     }
 
     return spell_cast;
+}
+
+/**
+ * Are we a short distance from our target?
+ *
+ * @param  mons The monster checking distance from its target.
+ * @return true if we have a target and are within LOS_RADIUS / 2 of that
+ *         target, or false otherwise.
+ */
+static bool _short_target_range(const monster *mons)
+{
+    return mons->get_foe()
+           && mons->pos().distance_from(mons->get_foe()->pos())
+              < LOS_RADIUS / 2;
+}
+
+/**
+ * Are we a long distance from our target?
+ *
+ * @param  mons The monster checking distance from its target.
+ * @return true if we have a target and are outside LOS_RADIUS / 2 of that
+ *         target, or false otherwise.
+ */
+static bool _long_target_range(const monster *mons)
+{
+    return mons->get_foe()
+           && mons->pos().distance_from(mons->get_foe()->pos())
+              > LOS_RADIUS / 2;
 }
 
 /**
@@ -3453,8 +3479,12 @@ bool handle_mon_spell(monster* mons, bolt &beem)
                 unsigned int i = 0;
                 for (; i < hspell_pass.size(); i++)
                 {
-                    if (hspell_pass[i].flags & MON_SPELL_EMERGENCY
-                        && !emergency)
+                    if ((hspell_pass[i].flags & MON_SPELL_EMERGENCY
+                         && !emergency)
+                        || (hspell_pass[i].flags & MON_SPELL_SHORT_RANGE
+                            && !_short_target_range(mons))
+                        || (hspell_pass[i].flags & MON_SPELL_LONG_RANGE
+                            && !_long_target_range(mons)))
                     {
                         continue;
                     }
@@ -3582,7 +3612,6 @@ bool handle_mon_spell(monster* mons, bolt &beem)
                     // unchivalric magic attacks, except against
                     // appropriate monsters.
                     if (find_stab_type(mons, foe) != STAB_NO_STAB
-                        && foe
                         && !tso_unchivalric_attack_safe_monster(foe->as_monster()))
                     {
                         spellOK = false;
@@ -5887,11 +5916,10 @@ void mons_cast(monster* mons, bolt pbolt, spell_type spell_cast,
                     move_items(*ai, mons->pos());
 
                 // All clouds are destroyed.
-                if (env.cgrid(*ai) != EMPTY_CLOUD)
-                    delete_cloud(env.cgrid(*ai));
+                delete_cloud(*ai);
 
                 // All traps are destroyed.
-                if (trap_def *ptrap = find_trap(*ai))
+                if (trap_def *ptrap = trap_at(*ai))
                     ptrap->destroy();
 
                 // Actually place the wall.

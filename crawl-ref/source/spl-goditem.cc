@@ -36,7 +36,7 @@
 #include "view.h"
 #include "viewchar.h"
 
-static void _print_holy_pacification_speech(const string key,
+static void _print_holy_pacification_speech(const string &key,
                                             monster* mon,
                                             msg_channel_type channel)
 {
@@ -112,9 +112,8 @@ static int _can_pacify_monster(const monster* mon, const int healed,
     if (healed < 1)
         return 0;
 
-    const int factor = (mons_intel(mon) < I_HUMAN)         ? 3 : // animals
-                       (is_player_same_genus(mon->type))   ? 2   // same genus
-                                                           : 1;  // other
+    const int factor = (mons_intel(mon) < I_HUMAN) ? 3  // animals
+                                                   : 1; // other
 
     int divisor = 3;
 
@@ -887,11 +886,10 @@ static bool _do_imprison(int pow, const coord_def& where, bool zin)
             }
 
             // All clouds are destroyed.
-            if (env.cgrid(*ai) != EMPTY_CLOUD)
-                delete_cloud(env.cgrid(*ai));
+            delete_cloud(*ai);
 
             // All traps are destroyed.
-            if (trap_def *ptrap = find_trap(*ai))
+            if (trap_def *ptrap = trap_at(*ai))
             {
                 ptrap->destroy();
                 grd(*ai) = DNGN_FLOOR;
@@ -1278,7 +1276,7 @@ void setup_cleansing_flame_beam(bolt &beam, int pow, int caster,
         beam.thrower   = KILL_MISC;
         beam.source_id = MID_NOBODY;
     }
-    else if (attacker && attacker->is_player())
+    else if (attacker->is_player())
     {
         beam.thrower   = KILL_YOU;
         beam.source_id = MID_PLAYER;

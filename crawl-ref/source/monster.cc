@@ -45,6 +45,7 @@
 #include "mon-cast.h"
 #include "mon-clone.h"
 #include "mon-death.h"
+#include "mon-pathfind.h"
 #include "mon-place.h"
 #include "mon-poly.h"
 #include "mon-tentacle.h"
@@ -399,12 +400,12 @@ random_var monster::attack_delay(const item_def *projectile,
                      : !weap;
 
     if (use_unarmed || !weap)
-        return 10;
+        return random_var(10);
 
-    random_var delay = property(*weap, PWPN_SPEED);
+    random_var delay(property(*weap, PWPN_SPEED));
     if (get_weapon_brand(*weap) == SPWPN_SPEED)
-        delay = div_rand_round(2 * delay, 3);
-    return (constant(10) + delay) / 2;
+        delay = div_rand_round(delay * 2, 3);
+    return (random_var(10) + delay) / 2;
 }
 
 int monster::has_claws(bool allow_tran) const
@@ -2793,7 +2794,7 @@ bool monster::fumbles_attack()
 
 bool monster::cannot_fight() const
 {
-    return !mons_class_gives_xp(type) || mons_is_statue(type);
+    return mons_class_is_firewood(this->type) || mons_is_statue(type);
 }
 
 void monster::attacking(actor * /* other */, bool /* ranged */)
@@ -2946,8 +2947,7 @@ void monster::banish(actor *agent, const string &, const int)
     if (!cell_is_solid(old_pos))
         place_cloud(CLOUD_TLOC_ENERGY, old_pos, 5 + random2(8), 0);
     for (adjacent_iterator ai(old_pos); ai; ++ai)
-        if (!cell_is_solid(*ai) && env.cgrid(*ai) == EMPTY_CLOUD
-            && coinflip())
+        if (!cell_is_solid(*ai) && !cloud_at(*ai) && coinflip())
         {
             place_cloud(CLOUD_TLOC_ENERGY, *ai, 1 + random2(8), 0);
         }
@@ -4582,7 +4582,7 @@ int monster::hurt(const actor *agent, int amount, beam_type flavour,
         }
 
         // Allow the victim to exhibit passive damage behaviour (e.g.
-        // the royal jelly).
+        // the Royal Jelly).
         react_to_damage(agent, amount, flavour);
 
         // Don't mirror Yredelemnul's effects (in particular don't mirror
@@ -4754,7 +4754,7 @@ bool monster::is_trap_safe(const coord_def& where, bool just_check) const
 {
     const mon_intel_type intel = mons_intel(this);
 
-    const trap_def *ptrap = find_trap(where);
+    const trap_def *ptrap = trap_at(where);
     if (!ptrap)
         return true;
     const trap_def& trap = *ptrap;
@@ -4854,10 +4854,22 @@ bool monster::is_trap_safe(const coord_def& where, bool just_check) const
     return true;
 }
 
-bool monster::is_cloud_safe(const coord_def &place)
+bool monster::is_cloud_safe(const coord_def &place) const
 {
-    int cl = env.cgrid(place);
-    return cl == EMPTY_CLOUD || !mons_avoids_cloud(this, cl);
+    return !mons_avoids_cloud(this, place);
+}
+
+static bool _can_path_to_staircase(const monster *mons, coord_def place)
+{
+    monster_pathfind mp;
+    mp.set_monster(mons);
+
+    for (rectangle_iterator ri(0); ri; ++ri)
+        if (feat_is_stone_stair(grd(*ri)))
+            if (mp.init_pathfind(place, *ri, true, false))
+                return true;
+
+    return false;
 }
 
 bool monster::check_set_valid_home(const coord_def &place,
@@ -4876,12 +4888,14 @@ bool monster::check_set_valid_home(const coord_def &place,
     if (!is_trap_safe(place, true))
         return false;
 
+    if (type == MONS_PLAYER_GHOST && !_can_path_to_staircase(this, place))
+        return false;
+
     if (one_chance_in(++nvalid))
         chosen = place;
 
     return true;
 }
-
 
 bool monster::is_location_safe(const coord_def &place)
 {
@@ -5209,8 +5223,7 @@ bool monster::can_go_frenzy() const
     if (mons_is_tentacle_or_tentacle_segment(type))
         return false;
 
-    // Insects are I_BRAINLESS and we want them to be able
-    // to berserk, so also check MH_NATURAL.
+    // Brainless natural monsters can still be berserked/frenzied.
     // This could maybe all be replaced by mons_is_object()?
     if (mons_intel(this) == I_BRAINLESS && holiness() != MH_NATURAL)
         return false;
@@ -5590,7 +5603,7 @@ void monster::apply_location_effects(const coord_def &oldpos,
     }
 
     // Monsters stepping on traps:
-    trap_def* ptrap = find_trap(pos());
+    trap_def* ptrap = trap_at(pos());
     if (ptrap)
         ptrap->trigger(*this);
 

@@ -103,7 +103,7 @@ static bool _marker_vetoes_level_change()
 
 static void _maybe_destroy_trap(const coord_def &p)
 {
-    trap_def* trap = find_trap(p);
+    trap_def* trap = trap_at(p);
     if (trap)
         trap->destroy(true);
 }
@@ -194,7 +194,7 @@ static void _clear_golubria_traps()
 {
     for (auto c : find_golubria_on_level())
     {
-        trap_def *trap = find_trap(c);
+        trap_def *trap = trap_at(c);
         if (trap && trap->type == TRAP_GOLUBRIA)
             trap->destroy();
     }
@@ -218,10 +218,6 @@ void leaving_level_now(dungeon_feature_type stair_used)
         mark_milestone("zig.exit", make_stringf("left a ziggurat at level %d.",
                        you.depth));
     }
-
-    // Note the name ahead of time because the events may cause markers
-    // to be discarded.
-    const string newtype = env.markers.property_at(you.pos(), MAT_ANY, "dst");
 
     dungeon_events.fire_position_event(DET_PLAYER_CLIMBS, you.pos());
     dungeon_events.fire_event(DET_LEAVING_LEVEL);
@@ -718,7 +714,7 @@ void floor_transition(dungeon_feature_type how,
                 && !you.branches_left[old_level.branch])
             {
                 string old_branch_string = branches[old_level.branch].longname;
-                if (old_branch_string.find("The ") == 0)
+                if (starts_with(old_branch_string, "The "))
                     old_branch_string[0] = tolower(old_branch_string[0]);
                 mark_milestone("br.exit", "left " + old_branch_string + ".",
                                old_level.describe());

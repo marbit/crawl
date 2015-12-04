@@ -1179,7 +1179,7 @@ static void _shunt_monsters_out_of_walls()
                          m.name(DESC_PLAIN, true).c_str(),
                          dungeon_feature_name(grd(m.pos())),
                          m.pos().x, m.pos().y);
-                    env.mgrid(m.pos()) = NON_ENTITY;
+                    env.mgrid(m.pos()) = NON_MONSTER;
                     m.position = *di;
                     env.mgrid(*di) = i;
                     break;
@@ -1257,12 +1257,12 @@ void tag_read(reader &inf, tag_type tag_id)
         // We can't do this when we unmarshall shops, since we haven't
         // unmarshalled items yet...
         if (th.getMinorVersion() < TAG_MINOR_SHOP_HACK)
-            for (int i = 0; i < MAX_SHOPS; ++i)
+            for (auto& entry : env.shop)
             {
                 // Shop items were heaped up at this cell.
-                for (stack_iterator si(coord_def(0, i+5)); si; ++si)
+                for (stack_iterator si(coord_def(0, entry.second.num+5)); si; ++si)
                 {
-                    env.shop[i].stock.push_back(*si);
+                    entry.second.stock.push_back(*si);
                     dec_mitm_item_quantity(si.index(), si->quantity);
                 }
             }
@@ -3707,11 +3707,10 @@ static void tag_read_you_dungeon(reader &th)
     ASSERT(place_info.is_global());
     you.set_place_info(place_info);
 
-    vector<PlaceInfo> list = you.get_all_place_info();
     unsigned short count_p = (unsigned short) unmarshallShort(th);
     // Use "<=" so that adding more branches or non-dungeon places
     // won't break save-file compatibility.
-    ASSERT(count_p <= list.size());
+    ASSERT(count_p <= you.get_all_place_info().size());
 
     for (int i = 0; i < count_p; i++)
     {
@@ -3809,49 +3808,45 @@ static void tag_construct_level(writer &th)
     CANARY;
 
     // how many clouds?
-    const int nc = _last_used_index(env.cloud, MAX_CLOUDS);
-    marshallShort(th, nc);
-    for (int i = 0; i < nc; i++)
+    marshallShort(th, env.cloud.size());
+    for (const auto& entry : env.cloud)
     {
-        marshallByte(th, env.cloud[i].type);
-        if (env.cloud[i].type == CLOUD_NONE)
-            continue;
-        ASSERT_IN_BOUNDS(env.cloud[i].pos);
-        marshallByte(th, env.cloud[i].pos.x);
-        marshallByte(th, env.cloud[i].pos.y);
-        marshallShort(th, env.cloud[i].decay);
-        marshallByte(th, env.cloud[i].spread_rate);
-        marshallByte(th, env.cloud[i].whose);
-        marshallByte(th, env.cloud[i].killer);
-        marshallInt(th, env.cloud[i].source);
-        marshallShort(th, env.cloud[i].colour);
-        marshallString(th, env.cloud[i].name);
-        marshallString(th, env.cloud[i].tile);
-        marshallInt(th, env.cloud[i].excl_rad);
+        const cloud_struct& cloud = entry.second;
+        marshallByte(th, cloud.type);
+        ASSERT(cloud.type != CLOUD_NONE);
+        ASSERT_IN_BOUNDS(cloud.pos);
+        marshallByte(th, cloud.pos.x);
+        marshallByte(th, cloud.pos.y);
+        marshallShort(th, cloud.decay);
+        marshallByte(th, cloud.spread_rate);
+        marshallByte(th, cloud.whose);
+        marshallByte(th, cloud.killer);
+        marshallInt(th, cloud.source);
+        marshallShort(th, cloud.colour);
+        marshallString(th, cloud.name);
+        marshallString(th, cloud.tile);
+        marshallInt(th, cloud.excl_rad);
     }
 
     CANARY;
 
     // how many shops?
-    const int ns = _last_used_index(env.shop, MAX_SHOPS);
-    marshallShort(th, ns);
-    for (int i = 0; i < ns; i++)
+    marshallShort(th, env.shop.size());
+    for (const auto& entry : env.shop)
     {
-        marshallByte(th, env.shop[i].type);
-        if (env.shop[i].type == SHOP_UNASSIGNED)
-            continue;
-        marshallByte(th, env.shop[i].keeper_name[0]);
-        marshallByte(th, env.shop[i].keeper_name[1]);
-        marshallByte(th, env.shop[i].keeper_name[2]);
-        marshallByte(th, env.shop[i].pos.x);
-        marshallByte(th, env.shop[i].pos.y);
-        marshallByte(th, env.shop[i].greed);
-        marshallByte(th, env.shop[i].level);
-        marshallString(th, env.shop[i].shop_name);
-        marshallString(th, env.shop[i].shop_type_name);
-        marshallString(th, env.shop[i].shop_suffix_name);
-        marshall_iterator(th, env.shop[i].stock.begin(),
-                              env.shop[i].stock.end(),
+        const shop_struct& shop = entry.second;
+        marshallByte(th, shop.type);
+        marshallByte(th, shop.keeper_name[0]);
+        marshallByte(th, shop.keeper_name[1]);
+        marshallByte(th, shop.keeper_name[2]);
+        marshallByte(th, shop.pos.x);
+        marshallByte(th, shop.pos.y);
+        marshallByte(th, shop.greed);
+        marshallByte(th, shop.level);
+        marshallString(th, shop.shop_name);
+        marshallString(th, shop.shop_type_name);
+        marshallString(th, shop.shop_suffix_name);
+        marshall_iterator(th, shop.stock.begin(), shop.stock.end(),
                               bind(marshallItem, placeholders::_1, placeholders::_2, false));
     }
 
@@ -3930,7 +3925,7 @@ void marshallItem(writer &th, const item_def &item, bool iinfo)
 
     item.orig_place.save(th);
     marshallShort(th, item.orig_monnum);
-    marshallString(th, item.inscription.c_str());
+    marshallString(th, item.inscription);
 
     item.props.write(th);
 }
@@ -4212,7 +4207,6 @@ void unmarshallItem(reader &th, item_def &item)
                 || item.sub_type == FOOD_BANANA
                 || item.sub_type == FOOD_STRAWBERRY
                 || item.sub_type == FOOD_RAMBUTAN
-                || item.sub_type == FOOD_LEMON
                 || item.sub_type == FOOD_GRAPE
                 || item.sub_type == FOOD_SULTANA
                 || item.sub_type == FOOD_LYCHEE
@@ -4380,9 +4374,19 @@ void unmarshallItem(reader &th, item_def &item)
     // to 0.17-a0-912-g3e33c8f. Also check for overcharged wands, in
     // case someone was patient enough to let it wrap around.
     if (item.base_type == OBJ_WANDS
-        && (item.charges < 0 || item.charges > wand_max_charges(item.sub_type)))
+        && (item.charges < 0 || item.charges > wand_max_charges(item)))
     {
         item.charges = 0;
+    }
+
+    // This works around a bug in Pakellas' supercharge wherein used_count
+    // wasn't reset properly, marking the wand as empty despite being
+    // fully charged. (This bug has now been fixed and was never in trunk, so
+    // this code can probably be removed from trunk.)
+    if (item.base_type == OBJ_WANDS && item.charges > 0
+        && item.used_count == ZAPCOUNT_EMPTY)
+    {
+        item.used_count = 0;
     }
 #endif
 
@@ -4574,16 +4578,14 @@ void unmarshallMapCell(reader &th, map_cell& cell)
 static void tag_construct_level_items(writer &th)
 {
     // how many traps?
-    const int nt = _last_used_index(env.trap, MAX_TRAPS);
-    marshallShort(th, nt);
-    for (int i = 0; i < nt; ++i)
+    marshallShort(th, env.trap.size());
+    for (const auto& entry : env.trap)
     {
-        marshallByte(th, env.trap[i].type);
-        if (env.trap[i].type == TRAP_UNASSIGNED)
-            continue;
-        marshallCoord(th, env.trap[i].pos);
-        marshallShort(th, env.trap[i].ammo_qty);
-        marshallUByte(th, env.trap[i].skill_rnd);
+        const trap_def& trap = entry.second;
+        marshallByte(th, trap.type);
+        marshallCoord(th, trap.pos);
+        marshallShort(th, trap.ammo_qty);
+        marshallUByte(th, trap.skill_rnd);
     }
 
     // how many items?
@@ -5222,8 +5224,6 @@ static void tag_read_level(reader &th)
             env.pgrid[i][j] = unmarshallInt(th);
 
             mgrd[i][j] = NON_MONSTER;
-            env.cgrid[i][j] = EMPTY_CLOUD;
-            env.tgrid[i][j] = NON_ENTITY;
         }
 
 #if TAG_MAJOR_VERSION == 34
@@ -5247,84 +5247,77 @@ static void tag_read_level(reader &th)
 
     EAT_CANARY;
 
-    env.cloud_no = 0;
-
     // how many clouds?
     const int num_clouds = unmarshallShort(th);
-    ASSERT_RANGE(num_clouds, 0, MAX_CLOUDS + 1);
+    cloud_struct cloud;
     for (int i = 0; i < num_clouds; i++)
     {
-        env.cloud[i].type  = static_cast<cloud_type>(unmarshallByte(th));
-        if (env.cloud[i].type == CLOUD_NONE)
-            continue;
-        env.cloud[i].pos.x = unmarshallByte(th);
-        env.cloud[i].pos.y = unmarshallByte(th);
-        env.cloud[i].decay = unmarshallShort(th);
-        env.cloud[i].spread_rate = unmarshallUByte(th);
-        env.cloud[i].whose = static_cast<kill_category>(unmarshallUByte(th));
-        env.cloud[i].killer = static_cast<killer_type>(unmarshallUByte(th));
-        env.cloud[i].source = unmarshallInt(th);
-        env.cloud[i].colour = unmarshallShort(th);
-        env.cloud[i].name   = unmarshallString(th);
-        env.cloud[i].tile   = unmarshallString(th);
-        env.cloud[i].excl_rad = unmarshallInt(th);
+        cloud.type  = static_cast<cloud_type>(unmarshallByte(th));
 #if TAG_MAJOR_VERSION == 34
-        // Please remove soon, after games get unstuck.
-        if (!in_bounds(env.cloud[i].pos) || cell_is_solid(env.cloud[i].pos))
-        {
-            env.cloud[i].type = CLOUD_NONE;
+        // old system marshalled empty clouds this way
+        if (cloud.type == CLOUD_NONE)
             continue;
-        }
 #else
-        ASSERT_IN_BOUNDS(env.cloud[i].pos);
+        ASSERT(cloud.type != CLOUD_NONE);
 #endif
-        env.cgrid(env.cloud[i].pos) = i;
-        env.cloud_no++;
+        cloud.pos.x = unmarshallByte(th);
+        cloud.pos.y = unmarshallByte(th);
+        ASSERT_IN_BOUNDS(cloud.pos);
+        cloud.decay = unmarshallShort(th);
+        cloud.spread_rate = unmarshallUByte(th);
+        cloud.whose = static_cast<kill_category>(unmarshallUByte(th));
+        cloud.killer = static_cast<killer_type>(unmarshallUByte(th));
+        cloud.source = unmarshallInt(th);
+        cloud.colour = unmarshallShort(th);
+        cloud.name   = unmarshallString(th);
+        cloud.tile   = unmarshallString(th);
+        cloud.excl_rad = unmarshallInt(th);
+
+        env.cloud[cloud.pos] = cloud;
     }
-    for (int i = num_clouds; i < MAX_CLOUDS; i++)
-        env.cloud[i].type = CLOUD_NONE;
 
     EAT_CANARY;
 
     // how many shops?
     const int num_shops = unmarshallShort(th);
-    ASSERT_RANGE(num_shops, 0, MAX_SHOPS + 1);
+    shop_struct shop;
     for (int i = 0; i < num_shops; i++)
     {
-        env.shop[i].type  = static_cast<shop_type>(unmarshallByte(th));
-        if (env.shop[i].type == SHOP_UNASSIGNED)
-            continue;
+        shop.type  = static_cast<shop_type>(unmarshallByte(th));
 #if TAG_MAJOR_VERSION == 34
+        if (shop.type == SHOP_UNASSIGNED)
+            continue;
+        shop.num = i;
         if (th.getMinorVersion() < TAG_MINOR_MISC_SHOP_CHANGE
-            && env.shop[i].type == NUM_SHOPS)
+            && shop.type == NUM_SHOPS)
         {
             // This was SHOP_MISCELLANY, which is now part of SHOP_EVOKABLES.
-            env.shop[i].type = SHOP_EVOKABLES;
+            shop.type = SHOP_EVOKABLES;
         }
+#else
+        ASSERT(shop.type != SHOP_UNASSIGNED);
 #endif
-        env.shop[i].keeper_name[0] = unmarshallUByte(th);
-        env.shop[i].keeper_name[1] = unmarshallUByte(th);
-        env.shop[i].keeper_name[2] = unmarshallUByte(th);
-        env.shop[i].pos.x = unmarshallByte(th);
-        env.shop[i].pos.y = unmarshallByte(th);
-        env.shop[i].greed = unmarshallByte(th);
-        env.shop[i].level = unmarshallByte(th);
-        env.shop[i].shop_name = unmarshallString(th);
-        env.shop[i].shop_type_name = unmarshallString(th);
-        env.shop[i].shop_suffix_name = unmarshallString(th);
+        shop.keeper_name[0] = unmarshallUByte(th);
+        shop.keeper_name[1] = unmarshallUByte(th);
+        shop.keeper_name[2] = unmarshallUByte(th);
+        shop.pos.x = unmarshallByte(th);
+        shop.pos.y = unmarshallByte(th);
+        shop.greed = unmarshallByte(th);
+        shop.level = unmarshallByte(th);
+        shop.shop_name = unmarshallString(th);
+        shop.shop_type_name = unmarshallString(th);
+        shop.shop_suffix_name = unmarshallString(th);
 #if TAG_MAJOR_VERSION == 34
         if (th.getMinorVersion() < TAG_MINOR_SHOP_HACK)
-            env.shop[i].stock.clear();
+            shop.stock.clear();
         else
 #endif
-        unmarshall_vector(th, env.shop[i].stock, [](reader& r) -> item_def
-                                                 { item_def ret;
-                                                   unmarshallItem(r, ret);
-                                                   return ret; });
-        env.tgrid(env.shop[i].pos) = i;
+        unmarshall_vector(th, shop.stock, [](reader& r) -> item_def
+                                             { item_def ret;
+                                               unmarshallItem(r, ret);
+                                               return ret; });
+        env.shop[shop.pos] = shop;
     }
-    for (int i = num_shops; i < MAX_SHOPS; ++i)
-        env.shop[i].type = SHOP_UNASSIGNED;
 
     EAT_CANARY;
 
@@ -5393,30 +5386,31 @@ static void tag_read_level_items(reader &th)
 {
     // how many traps?
     const int trap_count = unmarshallShort(th);
-    ASSERT_RANGE(trap_count, 0, MAX_TRAPS + 1);
+    trap_def trap;
     for (int i = 0; i < trap_count; ++i)
     {
-        env.trap[i].type =
-            static_cast<trap_type>(unmarshallUByte(th));
-        if (env.trap[i].type == TRAP_UNASSIGNED)
-            continue;
-        env.trap[i].pos      = unmarshallCoord(th);
-        env.trap[i].ammo_qty = unmarshallShort(th);
+        trap.type = static_cast<trap_type>(unmarshallUByte(th));
 #if TAG_MAJOR_VERSION == 34
-        if (th.getMinorVersion() == TAG_MINOR_0_11 && env.trap[i].type >= TRAP_TELEPORT)
-            env.trap[i].type = (trap_type)(env.trap[i].type - 1);
+        if (trap.type == TRAP_UNASSIGNED)
+            continue;
+#else
+        ASSERT(trap.type != TRAP_UNASSIGNED);
+#endif
+        trap.pos      = unmarshallCoord(th);
+        trap.ammo_qty = unmarshallShort(th);
+#if TAG_MAJOR_VERSION == 34
+        if (th.getMinorVersion() == TAG_MINOR_0_11 && trap.type >= TRAP_TELEPORT)
+            trap.type = (trap_type)(trap.type - 1);
         if (th.getMinorVersion() < TAG_MINOR_TRAPS_DETERM
             || th.getMinorVersion() == TAG_MINOR_0_11)
         {
-            env.trap[i].skill_rnd = random2(256);
+            trap.skill_rnd = random2(256);
         }
         else
 #endif
-        env.trap[i].skill_rnd = unmarshallUByte(th);
-        env.tgrid(env.trap[i].pos) = i;
+        trap.skill_rnd = unmarshallUByte(th);
+        env.trap[trap.pos] = trap;
     }
-    for (int i = trap_count; i < MAX_TRAPS; ++i)
-        env.trap[i].type = TRAP_UNASSIGNED;
 
     // how many items?
     const int item_count = unmarshallShort(th);
@@ -6237,7 +6231,7 @@ static void unmarshallSpells(reader &th, monster_spells &spells
 
 static void marshallGhost(writer &th, const ghost_demon &ghost)
 {
-    marshallString(th, ghost.name.c_str());
+    marshallString(th, ghost.name);
 
     marshallShort(th, ghost.species);
     marshallShort(th, ghost.job);

@@ -832,7 +832,7 @@ amulet of resist corrosion
 
 <amulet>
 %%%%
-amulet of resist mutation
+amulet of nothing
 
 <amulet>
 %%%%
@@ -3320,6 +3320,13 @@ time to time, to pass across the glowing face of the pile, like a bat in front
 of a candle.”
     -Victor Hugo, _The Hunchback of Notre-Dame_, 10, ch. IV. 1831.
      trans. Isabel F. Hapgood
+%%%%
+wolf
+
+“Teacher: How does a dog smell?
+ Student: I don't know.
+ Teacher: Correct!”
+    -Traditional Spanish joke.
 %%%%
 water nymph
 

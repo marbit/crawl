@@ -121,8 +121,7 @@ static void _write_abyssal_features()
         return;
 
     dprf(DIAG_ABYSS, "Writing a mock-up of old level.");
-    const int count = abyssal_features.size();
-    ASSERT(count == sqr(2 * LOS_RADIUS + 1));
+    ASSERT((int)abyssal_features.size() == sqr(2 * LOS_RADIUS + 1));
     const int scalar = 0xFF;
     int index = 0;
     for (int x = -LOS_RADIUS; x <= LOS_RADIUS; x++)
@@ -143,7 +142,7 @@ static void _write_abyssal_features()
                         grd(p) = abyssal_features[index];
                         env.level_map_mask(p) = MMT_VAULT;
                         if (cell_is_solid(p))
-                            delete_cloud_at(p);
+                            delete_cloud(p);
                         if (monster* mon = monster_at(p))
                             _push_displaced_monster(mon);
                     }
@@ -612,8 +611,6 @@ static void _push_displaced_monster(monster* mon)
 
 static void _place_displaced_monsters()
 {
-    list<monster*>::iterator mon_itr;
-
     for (monster *mon : displaced_monsters)
     {
         if (mon->alive() && !mon->find_home_near_place(mon->pos()))
@@ -706,7 +703,7 @@ static void _abyss_wipe_square_at(coord_def p, bool saveMonsters=false)
     }
 
     // Delete cloud.
-    delete_cloud_at(p);
+    delete_cloud(p);
 
     env.pgrid(p)        = 0;
     env.grid_colours(p) = 0;
@@ -981,7 +978,7 @@ void maybe_shift_abyss_around_player()
         ++j;
 
     dprf(DIAG_ABYSS, "Number of monsters present: %d", j);
-    dprf(DIAG_ABYSS, "Number of clouds present: %d", env.cloud_no);
+    dprf(DIAG_ABYSS, "Number of clouds present: %d", int(env.cloud.size()));
 #endif
 }
 
@@ -1196,11 +1193,7 @@ static void _update_abyss_terrain(const coord_def &p,
                 check_place_cloud(_cloud_from_feat(currfeat), rp, cloud_life, 0, 3);
         }
         else if (feat_is_solid(feat))
-        {
-            int cloud = env.cgrid(rp);
-            if (cloud != EMPTY_CLOUD)
-                delete_cloud(cloud);
-        }
+            delete_cloud(rp);
         monster* mon = monster_at(rp);
         if (mon && !monster_habitable_grid(mon, feat))
             _push_displaced_monster(mon);
@@ -1692,8 +1685,10 @@ static bool _incorruptible(monster_type mt)
 static bool _spawn_corrupted_servant_near(const coord_def &pos)
 {
     const beh_type beh =
-        x_chance_in_y(100, 200 + you.skill(SK_INVOCATIONS, 25)) ? BEH_HOSTILE
-        : BEH_NEUTRAL;
+        x_chance_in_y(100,
+                      player_adjust_invoc_power(
+                          200 + you.skill(SK_INVOCATIONS, 25)))
+        ? BEH_HOSTILE : BEH_NEUTRAL;
 
     // [ds] No longer summon hostiles -- don't create the monster if
     // it would be hostile.

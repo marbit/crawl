@@ -368,6 +368,8 @@ static const duration_def duration_data[] =
         RED, "Howl",
         "doom howling", "howl",
         "A terrible howling echoes in your mind.", D_DISPELLABLE },
+    { DUR_DEVICE_SURGE, WHITE, "Surge", "device surging", "device surge",
+      "You have readied a device surge.", D_EXPIRES},
 
     // The following are visible in wizmode only, or are handled
     // specially in the status lights and/or the % or @ screens.
