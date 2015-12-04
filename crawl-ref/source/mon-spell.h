@@ -2086,7 +2086,7 @@ static const mon_spellbook mspell_list[] =
 
     {  MST_DOOM_HOUND,
       {
-       { SPELL_DOOM_HOWL, 20, MON_SPELL_NATURAL },
+       { SPELL_DOOM_HOWL, 30, MON_SPELL_NATURAL },
       }
     },
 };
