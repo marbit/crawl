@@ -2065,6 +2065,12 @@ static const mon_spellbook mspell_list[] =
       }
     },
 
+    {  MST_DOOM_HOUND,
+      {
+       { SPELL_DOOM_HOWL, 30, MON_SPELL_NATURAL },
+      }
+    },
+
     {  MST_DEEP_ELF_ARCHER,
       {
        { SPELL_BLINK_AWAY, 67, MON_SPELL_WIZARD | MON_SPELL_SHORT_RANGE },
