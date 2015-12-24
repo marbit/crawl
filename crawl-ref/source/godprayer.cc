@@ -148,6 +148,12 @@ static bool _try_god_conversion(god_type god, bool beogh_priest)
         return false;
     }
 
+    if  (you.species == SP_LACERTILIAN && you.experience_level < 5) //Start Marbit
+    {
+        mpr("You cannot commune with the divine in your immature state.");
+        return false;
+    }
+
     if (god == GOD_ECUMENICAL)
         return _pray_ecumenical_altar();
 
