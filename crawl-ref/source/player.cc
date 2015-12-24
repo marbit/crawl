@@ -2848,6 +2848,13 @@ void level_change(bool skip_attribute_increase)
 
             switch (you.species)
             {
+            case SP_LACERTILIAN:
+                if (you.experience_level == 5 && you.religion==GOD_NO_GOD)
+                {
+		                  join_religion(random_god());
+                }
+                break;
+             
             case SP_VAMPIRE:
                 if (you.experience_level == 3)
                 {
